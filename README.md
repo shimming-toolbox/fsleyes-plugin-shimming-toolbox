@@ -2,6 +2,20 @@
 
 ## Installation
 
+In the `fsleyes-plugin-shimming-toolbox` folder, run:
+
+```
+make install
+```
+
+## Running
+
+In the `fsleyes-plugin-shimming-toolbox` folder, run:
+
+```
+make run
+```
+
 
 ### Developers
 
