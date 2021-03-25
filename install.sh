@@ -1,8 +1,11 @@
 #!/usr/bin/env zsh
 
+VENV_ID=1267b18e73341ad94da34474
+VENV=pst_venv_$VENV_ID
+
 conda activate base
-yes | conda create --name fpst_venv
-yes | conda activate fpst_venv
+yes | conda create --name $VENV
+yes | conda activate $VENV
 yes | conda install -c conda-forge fsleyes
 yes | conda install -c conda-forge wxpython=4.0.7
 cd ..
