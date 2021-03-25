@@ -1,17 +1,14 @@
 
 
 # You can set these variables from the command line.
-SPHINXOPTS    =
-SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = SpinalCordToolbox
-SOURCEDIR     = source
-BUILDDIR      = build
+# SPHINXBUILD   = python -msphinx
+# SPHINXPROJ    = SpinalCordToolbox
 
 # Put it first so that "make" without argument is like "make help".
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+# help:
+# 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+# .PHONY: help Makefile
 
 install:
 	conda init zsh
