@@ -6,13 +6,15 @@
 
 # Put it first so that "make" without argument is like "make help".
 # help:
-# 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+# 	TODO
 
 # .PHONY: help Makefile
 
 install:
 	conda init zsh
-	zsh -i install.sh
+	zsh -i install/install_plugin.sh
+	zsh -i installer/install_pipx.sh
+	zsh -i installer/install_shimming_toolbox.sh
 
 run:
 	conda init zsh
