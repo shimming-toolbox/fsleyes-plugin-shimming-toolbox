@@ -3,6 +3,7 @@ from setuptools import setup, find_packages
 setup(
     # the name must begin with "fsleyes-plugin-"
     name='fsleyes-plugin-shimming-toolbox',
+    install_requires=["imageio"],
 
     # Views, controls, and tools must be exposed
     # as entry points within groups called
