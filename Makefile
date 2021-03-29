@@ -7,7 +7,7 @@ help:
 
 install: ## Run 'make install' to install the plugin
 	conda init zsh
-	zsh -i install/install_plugin.sh
+	zsh -i installer/install_plugin.sh
 	zsh -i installer/install_pipx.sh
 	zsh -i installer/install_shimming_toolbox.sh
 
