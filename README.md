@@ -56,3 +56,43 @@ in any environment you want, as long as you can use `pipx`.
 ```
 pipx install -e path/to/shimming-toolbox
 ```
+
+## Testing with Docker
+
+We can use `Docker` to spin up a Linux instance and test our install procedure in a clean
+environment. You will need to install `Docker` on your computer first: https://www.docker.com/products/docker-desktop
+
+To create our testing container, we will first build an image called `fpst:latest`:
+```
+docker build --tag fpst:latest .
+```
+
+Once our image is built, we want to remove any running instances of the container:
+```
+docker rm --force fpst
+```
+
+Then, we can create a container from our `fpst:latest` image:
+```
+docker run --name fpst -dit fpst:latest
+```
+
+To test our package, we can use the `bash` function of the container:
+```
+docker exec -it fpst bash
+```
+
+Once inside the container terminal, we can find our plugin package and test it:
+```
+cd src/fsleyes-plugin-shimming-toolbox
+make install
+```
+
+Altogether:
+
+```
+docker rm --force fpst
+docker build --tag fpst:latest .
+docker run --name fpst -dit fpst:latest
+docker exec -it fpst bash
+```
