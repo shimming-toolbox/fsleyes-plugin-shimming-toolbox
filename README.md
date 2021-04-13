@@ -1,5 +1,8 @@
 # fsleyes-plugin-shimming-toolbox
 
+This plugin allows users to integrate `NeuroPoly`'s `shimming-toolbox` application with the
+`FSLeyes` GUI.
+
 ## Installation
 
 In the `fsleyes-plugin-shimming-toolbox` folder, run:
@@ -95,4 +98,56 @@ docker rm --force fpst
 docker build --tag fpst:latest .
 docker run --name fpst -dit fpst:latest
 docker exec -it fpst bash
+```
+
+## Testing with VirtualBox
+
+To test on different operating systems, you will need to use a virtual machine. You will need to
+install `VirtualBox`: https://www.virtualbox.org/wiki/Downloads. You will also need to install
+the Oracle VM VirtualBox Extension Pack in order to test MacOSX.
+
+`Vagrant` is a tool that interfaces with `VirtualBox` and streamlines the process:
+https://learn.hashicorp.com/tutorials/vagrant/getting-started-index?in=vagrant/getting-started
+
+We have 3 different folders with `Vagrantfile`s for testing each OS:
+
+```
+| testing
+| -- vagrant_linux/
+| -- vagrant_mac/
+| -- vagrant_windows/
+```
+
+To create the virtual box, run:
+```
+cd testing/vagrant_{OS}
+vagrant up
+```
+
+Next, ssh into the shell and run the `fsleyes-plugin-shimming-toolbox` installer:
+```
+cd src/fsleyes-plugin/shimming-toolbox/
+sudo make install
+```
+
+### Vagrant Tips
+
+To stop the box from running (but not remove it):
+```
+vagrant suspend
+```
+
+To resume the box:
+```
+vagrant resume
+```
+
+To remove the box completely:
+```
+vagrant destroy
+```
+
+If you update your `Vagrantfile` and you want to reload the box:
+```
+vagrant reload
 ```
