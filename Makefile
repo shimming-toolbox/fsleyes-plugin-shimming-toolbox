@@ -10,5 +10,4 @@ install: ## Run 'make install' to install the plugin
 	bash installer/install_shimming_toolbox.sh
 
 run: ## To open FSLeyes with the plugin, run 'make run'
-	conda init bash
 	bash -i run.sh
