@@ -1,7 +1,6 @@
-# fsleyes-plugin-shimming-toolbox
+# FSLeyes Plugin for Shimming Toolbox
 
-This plugin allows users to integrate `NeuroPoly`'s `shimming-toolbox` application with the
-`FSLeyes` GUI.
+This plugin allows users to integrate `NeuroPoly`'s `shimming-toolbox` application with the `FSLeyes` GUI. You can read the [Shimming Toolbox Documentation](https://shimming-toolbox.org/en/latest/) for more information, or view the [Shimming Toolbox GitHub Repo](https://github.com/shimming-toolbox/shimming-toolbox) to see the source code.
 
 ## Installation
 
@@ -19,9 +18,9 @@ In the `fsleyes-plugin-shimming-toolbox` folder, run:
 make run
 ```
 
+## Developer Section
 
-### Developers
-
+### Installation
 
 First, you will need to create a `conda` virtual environment, and activate it.
 
@@ -60,7 +59,7 @@ in any environment you want, as long as you can use `pipx`.
 pipx install -e path/to/shimming-toolbox
 ```
 
-## Testing with Docker
+### Testing with Docker
 
 We can use `Docker` to spin up a Linux instance and test our install procedure in a clean
 environment. You will need to install `Docker` on your computer first: https://www.docker.com/products/docker-desktop
@@ -100,7 +99,7 @@ docker run --name fpst -dit fpst:latest
 docker exec -it fpst bash
 ```
 
-## Testing with VirtualBox
+### Testing with VirtualBox
 
 To test on different operating systems, you will need to use a virtual machine. You will need to
 install `VirtualBox`: https://www.virtualbox.org/wiki/Downloads. You will also need to install
@@ -130,7 +129,7 @@ cd src/fsleyes-plugin/shimming-toolbox/
 sudo make install
 ```
 
-### Vagrant Tips
+#### Vagrant Tips
 
 To stop the box from running (but not remove it):
 ```
