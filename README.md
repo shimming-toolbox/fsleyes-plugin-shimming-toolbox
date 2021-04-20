@@ -129,6 +129,23 @@ cd src/fsleyes-plugin/shimming-toolbox/
 sudo make install
 ```
 
+#### GUI in VirtualBox
+
+Currently this is only functional for the Mac VirtualBox. When you run `vagrant up`, a GUI
+should open. When you see the login screen, enter:
+
+```
+user: vagrant
+password: vagrant
+```
+
+You can open a terminal from this GUI, and run `FSLeyes` by:
+
+```
+cd src/fsleyes-plugin/shimming-toolbox/
+make run
+```
+
 #### Vagrant Tips
 
 To stop the box from running (but not remove it):
