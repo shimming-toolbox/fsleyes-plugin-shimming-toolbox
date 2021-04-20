@@ -16,7 +16,7 @@ setup(
         #     'My cool view = myplugin:MyView'
         # ],
         'fsleyes_controls': [
-            'My cool control = fsleyes_plugin_shimming_toolbox.st_plugin:STControlPanel'
+            'Shimming Toolbox = fsleyes_plugin_shimming_toolbox.st_plugin:STControlPanel'
         ],
         # 'fsleyes_tools': [
         #     'My cool tool = myplugin:MyTool'
