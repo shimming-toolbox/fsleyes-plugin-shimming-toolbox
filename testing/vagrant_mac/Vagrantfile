@@ -21,6 +21,9 @@ Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |vb|
       vb.memory = 2048
       vb.cpus = 4
+      vb.gui = true
+      # vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
+      vb.customize ['modifyvm', :id, '--graphicscontroller', 'vboxvga']
   end
 
   # Disable automatic box update checking. If you disable this, then
@@ -63,4 +66,8 @@ Vagrant.configure("2") do |config|
   #   apt-get install -y apache2
   # SHELL
   config.vm.provision "shell", path: "install.sh"
+
+  # Allow for display
+  # config.ssh.forward_x11 = true
+
 end
