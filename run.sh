@@ -9,8 +9,6 @@ PYTHON_DIR=python
 
 # conda activate base
 source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
-set +u
 conda activate $VENV
-set -u
 
 fsleyes &

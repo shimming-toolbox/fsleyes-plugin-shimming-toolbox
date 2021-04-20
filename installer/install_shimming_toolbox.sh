@@ -50,9 +50,9 @@ function edit_shellrc() {
 
 # conda activate base
 source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
-set +u
+# set +u
 conda activate $VENV
-set -u
+# set -u
 
 cd ..
 curl -L https://github.com/shimming-toolbox/shimming-toolbox/archive/refs/tags/v0.1-beta.tar.gz > shimming-toolbox-0.1-beta.tar.gz

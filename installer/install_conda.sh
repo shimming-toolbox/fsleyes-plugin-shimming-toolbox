@@ -142,8 +142,8 @@ sed_i 's/^ENABLE_USER_SITE.*$/ENABLE_USER_SITE = False/' "$ST_DIR/$PYTHON_DIR/en
 # shellcheck disable=SC1091
 source python/etc/profile.d/conda.sh
 
-set +u #disable safeties, for conda is not written to their standard.
+# set +u #disable safeties, for conda is not written to their standard.
 conda activate $VENV
-set -u # reactivate safeties
+# set -u # reactivate safeties
 
 rm -rf "$TMP_DIR"
