@@ -12,7 +12,7 @@ source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
 # set +u
 conda activate $VENV
 # set -u
-yes | conda install -c conda-forge fsleyes
+yes | conda install -c conda-forge fsleyes=0.34.2
 yes | conda install -c conda-forge wxpython=4.0.7
 echo "Installing fsleyes-plugin-shimming-toolbox"
 python -m pip install .
