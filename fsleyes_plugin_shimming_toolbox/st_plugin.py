@@ -18,7 +18,6 @@ import wx
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
 
-
 import numpy as np
 import webbrowser
 import nibabel as nib
@@ -29,8 +28,9 @@ import logging
 import imageio
 import subprocess
 
-__dir_shimmingtoolbox__ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 logger = logging.getLogger(__name__)
+
+CURR_DIR = os.getcwd()
 
 DIR = os.path.dirname(__file__)
 
@@ -231,8 +231,6 @@ class InfoComponent(Component):
         Retunrs:
             wx.StaticBitmap: The ``ShimmingToolbox`` logo
         """
-        # fname_st_logo = os.path.join(__dir_shimmingtoolbox__, 'docs', 'source', '_static',
-        #                              'shimming_toolbox_logo.png')
         fname_st_logo = os.path.join(DIR, 'img', 'shimming_toolbox_logo.png')
 
         png = wx.Image(fname_st_logo, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
@@ -637,7 +635,7 @@ class ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_zshim(self, metadata=None):
-        path_output = os.path.join(__dir_shimmingtoolbox__, "output_rt_zshim")
+        path_output = os.path.join(CURR_DIR, "output_rt_zshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -771,7 +769,7 @@ class FieldMapTab(Tab):
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
+                    CURR_DIR,
                     "output_fieldmap",
                     "fieldmap.nii.gz"),
                 "name": "output",
@@ -905,7 +903,7 @@ class MaskTab(Tab):
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
+                    CURR_DIR,
                     "output_mask_threshold",
                     "mask.nii.gz"
                 ),
@@ -950,7 +948,7 @@ class MaskTab(Tab):
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
+                    CURR_DIR,
                     "output_mask_rect",
                     "mask.nii.gz"
                 ),
@@ -995,7 +993,7 @@ class MaskTab(Tab):
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
+                    CURR_DIR,
                     "output_mask_box",
                     "mask.nii.gz"
                 ),
@@ -1041,7 +1039,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Config Path",
                 "button_function": "select_file",
-                "default_text": os.path.join(__dir_shimmingtoolbox__,
+                "default_text": os.path.join(CURR_DIR,
                                              "config",
                                              "dcm2bids.json"),
                 "name": "config",
@@ -1050,7 +1048,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
-                "default_text": os.path.join(__dir_shimmingtoolbox__, "output_dicom_to_nifti"),
+                "default_text": os.path.join(CURR_DIR, "output_dicom_to_nifti"),
                 "name": "output",
                 "info_text": "Output path for NIfTI files."
             }
@@ -1171,7 +1169,7 @@ class InfoIcon(wx.StaticBitmap):
 
 def select_folder(event, ctrl):
     """Select a file folder from system path."""
-    dlg = wx.DirDialog(None, "Choose Directory", __dir_shimmingtoolbox__,
+    dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR,
                        wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
@@ -1184,7 +1182,7 @@ def select_file(event, ctrl):
     """Select a file from system path."""
     dlg = wx.FileDialog(parent=None,
                         message="Select File",
-                        defaultDir=__dir_shimmingtoolbox__,
+                        defaultDir=CURR_DIR,
                         style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
