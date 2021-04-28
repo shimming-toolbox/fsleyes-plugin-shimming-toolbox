@@ -1033,7 +1033,6 @@ class DicomToNiftiTab(Tab):
                 "button_label": "Config Path",
                 "button_function": "select_file",
                 "default_text": os.path.join(CURR_DIR,
-                                             "config",
                                              "dcm2bids.json"),
                 "name": "config",
                 "info_text": "Full file path and name of the BIDS config file"
