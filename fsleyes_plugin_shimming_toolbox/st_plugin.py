@@ -26,7 +26,9 @@ import abc
 import tempfile
 import logging
 import imageio
-import subprocess
+
+from utils import run_subprocess
+
 
 logger = logging.getLogger(__name__)
 
@@ -1304,27 +1306,6 @@ def read_image(filename, bitdepth=8):
 def write_image(filename, img, format='png'):
     """Write image."""
     imageio.imwrite(filename, img, format=format)
-
-
-# TODO: find a better way to include this as it is defined in utils as well
-def run_subprocess(cmd):
-    """Wrapper for ``subprocess.run()`` that enables to input ``cmd`` as a full string (easier for debugging).
-
-    Args:
-        cmd (string): full command to be run on the command line
-    """
-    logging.debug(f'{cmd}')
-    try:
-        subprocess.run(
-            cmd.split(' '),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True
-        )
-    except subprocess.CalledProcessError as err:
-        msg = "Return code: ", err.returncode, "\nOutput: ", err.stderr
-        raise Exception(msg)
 
 
 def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overlayList=True,
