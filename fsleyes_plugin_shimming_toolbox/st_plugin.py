@@ -27,7 +27,7 @@ import tempfile
 import logging
 import imageio
 
-from utils import run_subprocess
+from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 
 
 logger = logging.getLogger(__name__)
@@ -637,7 +637,7 @@ class ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_zshim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_rt_zshim")
+        path_output = create_folder(os.path.join(CURR_DIR, "output_rt_zshim"))
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -739,6 +739,8 @@ class FieldMapTab(Tab):
                 "option_value": "QGU"
             }
         ]
+        path_output = create_folder(os.path.join(CURR_DIR, "output_fieldmap"))
+
         input_text_box_metadata_prelude = [
             {
                 "button_label": "Input Magnitude",
@@ -770,10 +772,7 @@ class FieldMapTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    CURR_DIR,
-                    "output_fieldmap",
-                    "fieldmap.nii.gz"),
+                "default_text": os.path.join(path_output, "fieldmap.nii.gz"),
                 "name": "output",
                 "info_text": "Output filename for the fieldmap, supported types : '.nii', '.nii.gz'",
                 "required": True
@@ -885,6 +884,7 @@ class MaskTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_threshold(self, metadata=None):
+        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_threshold"))
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -904,11 +904,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    CURR_DIR,
-                    "output_mask_threshold",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -923,6 +919,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_rect(self):
+        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_rect"))
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -949,11 +946,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    CURR_DIR,
-                    "output_mask_rect",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -968,6 +961,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_box(self):
+        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_box"))
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -994,11 +988,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    CURR_DIR,
-                    "output_mask_box",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -1024,6 +1014,7 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Process dicoms into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
+        path_output = create_folder(os.path.join(CURR_DIR, "output_dicom_to_nifti"))
         input_text_box_metadata = [
             {
                 "button_label": "Input Folder",
@@ -1050,7 +1041,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
-                "default_text": os.path.join(CURR_DIR, "output_dicom_to_nifti"),
+                "default_text": path_output,
                 "name": "output",
                 "info_text": "Output path for NIfTI files."
             }
@@ -1358,3 +1349,12 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
+
+
+def create_folder(path):
+    """Recursively create folder if it does not exist."""
+    if os.path.exists(path):
+        return path
+    else:
+        os.makedirs(path)
+        return path
