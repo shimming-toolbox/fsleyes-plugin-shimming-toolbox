@@ -5,3 +5,4 @@ build/
 dist/
 .vagrant/
 dcm2bids.json
+output_*
