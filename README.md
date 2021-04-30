@@ -18,6 +18,14 @@ In the `fsleyes-plugin-shimming-toolbox` folder, run:
 make run
 ```
 
+The `FSLeyes` GUI should open. Once it is open, select from the toolbar:
+
+```
+Settings --> OrthoView --> ShimmingToolbox
+```
+
+The `ShimmingToolbox` plugin should open as a panel.
+
 ## Developer Section
 
 ### Testing with Docker
