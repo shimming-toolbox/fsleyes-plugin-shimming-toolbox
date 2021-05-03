@@ -10,4 +10,4 @@ install: ## Run 'make install' to install the plugin
 	bash installer/install_shimming_toolbox.sh
 
 run: ## To open FSLeyes with the plugin, run 'make run'
-	bash -i run.sh
+	bash shimming-toolbox.sh
