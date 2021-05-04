@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """Shimming Toolbox FSLeyes Plugin
 
 This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into FSLeyes:
@@ -26,6 +28,7 @@ import abc
 import tempfile
 import logging
 import imageio
+from pathlib import Path
 
 from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 
@@ -455,6 +458,7 @@ class RunComponent(Component):
         try:
             command, msg = self.get_run_args(self.st_function)
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
+            self.create_output_folder()
             run_subprocess(command)
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
@@ -482,6 +486,17 @@ class RunComponent(Component):
                         window.overlayList.append(img_overlay)
                 except Exception as err:
                     self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
+
+    def create_output_folder(self):
+        """Recursively create output folder if it does not exist."""
+        for output_path in self.output_paths:
+            output_folder = get_folder(output_path)
+            if not os.path.exists(output_folder):
+                self.panel.terminal_component.log_to_terminal(
+                    f"Creating folder {output_folder}",
+                    level="INFO"
+                )
+                os.makedirs(output_folder)
 
     def get_run_args(self, st_function):
         msg = "Running "
@@ -637,7 +652,7 @@ class ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_zshim(self, metadata=None):
-        path_output = create_folder(os.path.join(CURR_DIR, "output_rt_zshim"))
+        path_output = os.path.join(CURR_DIR, "output_rt_zshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -739,7 +754,7 @@ class FieldMapTab(Tab):
                 "option_value": "QGU"
             }
         ]
-        path_output = create_folder(os.path.join(CURR_DIR, "output_fieldmap"))
+        path_output = os.path.join(CURR_DIR, "output_fieldmap")
 
         input_text_box_metadata_prelude = [
             {
@@ -884,7 +899,7 @@ class MaskTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_threshold(self, metadata=None):
-        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_threshold"))
+        path_output = os.path.join(CURR_DIR, "output_mask_threshold")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -919,7 +934,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_rect(self):
-        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_rect"))
+        path_output = os.path.join(CURR_DIR, "output_mask_rect")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -961,7 +976,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_box(self):
-        path_output = create_folder(os.path.join(CURR_DIR, "output_mask_box"))
+        path_output = os.path.join(CURR_DIR, "output_mask_box")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1014,7 +1029,7 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Process dicoms into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
-        path_output = create_folder(os.path.join(CURR_DIR, "output_dicom_to_nifti"))
+        path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
             {
                 "button_label": "Input Folder",
@@ -1350,10 +1365,12 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
     return img_overlay
 
 
-def create_folder(path):
-    """Recursively create folder if it does not exist."""
-    if os.path.exists(path):
-        return path
+def get_folder(path):
+    if is_file(path):
+        return os.path.split(path)[0]
     else:
-        os.makedirs(path)
         return path
+
+
+def is_file(path):
+    return '.' in Path(path).name
