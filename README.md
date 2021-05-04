@@ -12,16 +12,16 @@ make install
 
 ## Running
 
-In the `fsleyes-plugin-shimming-toolbox` folder, run:
+Now, you can open the `FSLeyes` GUI from any environment by running:
 
 ```
-make run
+shimming-toolbox
 ```
 
 The `FSLeyes` GUI should open. Once it is open, select from the toolbar:
 
 ```
-Settings --> OrthoView --> ShimmingToolbox
+Settings --> OrthoView --> Shimming Toolbox
 ```
 
 The `ShimmingToolbox` plugin should open as a panel.
