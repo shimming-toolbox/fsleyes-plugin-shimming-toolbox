@@ -48,7 +48,6 @@ function edit_shellrc() {
   ) >> "$RC_FILE_PATH"
 }
 
-# conda activate base
 source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
 # set +u
 conda activate $VENV
@@ -61,7 +60,7 @@ cd shimming-toolbox-0.1-beta
 cp config/dcm2bids.json ../fsleyes-plugin-shimming-toolbox/dcm2bids.json
 python -m pip install .
 
-## Create launchers for Python scripts
+# Create launchers for Python scripts
 echo "Creating launchers for Python scripts..."
 mkdir -p $ST_DIR/$BIN_DIR
 echo $ST_DIR/python/envs/$VENV/bin/*st_*
@@ -69,7 +68,7 @@ for file in $ST_DIR/python/envs/$VENV/bin/*st_*; do
   cp "$file" $ST_DIR/$BIN_DIR/ # || die "Problem creating launchers!"
 done
 
-# Activate the launchers, particularly sct_download_data and sct_check_requirements
+# Activate the launchers
 export PATH=$ST_DIR/$BIN_DIR:$PATH
 
 edit_shellrc
