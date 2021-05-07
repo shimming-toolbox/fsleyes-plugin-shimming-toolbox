@@ -96,6 +96,14 @@ Next, ssh into the shell and run the `fsleyes-plugin-shimming-toolbox` installer
 ```
 cd src/fsleyes-plugin/shimming-toolbox/
 sudo make install
+source /Users/vagrant/.bashrc
+```
+
+To convert the install to an editable developer install:
+```
+source /Users/vagrant/shimming_toolbox/python/etc/profile.d/conda.sh
+conda activate pst_venv_1267b18e73341ad94da34474
+sudo pip3 install -e .
 ```
 
 #### GUI in VirtualBox
