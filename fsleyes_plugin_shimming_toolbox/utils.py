@@ -2,6 +2,7 @@ import subprocess
 import logging
 import os
 from pathlib import Path
+import imageio
 logger = logging.getLogger(__name__)
 
 
@@ -38,3 +39,23 @@ def get_folder(path):
 def is_file(path):
     """Check if a given path is a file."""
     return '.' in Path(path).name
+
+
+def read_image(filename, bitdepth=8):
+    """Read image and convert it to desired bitdepth without truncation."""
+    if 'tif' in str(filename):
+        raw_img = imageio.imread(filename, format='tiff-pil')
+        if len(raw_img.shape) > 2:
+            raw_img = imageio.imread(filename, format='tiff-pil', as_gray=True)
+    else:
+        raw_img = imageio.imread(filename)
+        if len(raw_img.shape) > 2:
+            raw_img = imageio.imread(filename, as_gray=True)
+
+    img = imageio.core.image_as_uint(raw_img, bitdepth=bitdepth)
+    return img
+
+
+def write_image(filename, img, format='png'):
+    """Write image."""
+    imageio.imwrite(filename, img, format=format)

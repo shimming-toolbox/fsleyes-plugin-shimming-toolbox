@@ -20,16 +20,15 @@ import wx
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
 
-import numpy as np
 import webbrowser
-import nibabel as nib
 import os
 import abc
 import tempfile
 import logging
-import imageio
+import numpy as np
+import nibabel as nib
 
-from fsleyes_plugin_shimming_toolbox.utils import run_subprocess, get_folder
+from fsleyes_plugin_shimming_toolbox.utils import run_subprocess, get_folder, read_image
 
 
 logger = logging.getLogger(__name__)
@@ -1290,26 +1289,6 @@ def add_input_phase_boxes(event, tab, ctrl):
 class RunArgumentErrorST(Exception):
     """Exception for missing input arguments for CLI call."""
     pass
-
-
-def read_image(filename, bitdepth=8):
-    """Read image and convert it to desired bitdepth without truncation."""
-    if 'tif' in str(filename):
-        raw_img = imageio.imread(filename, format='tiff-pil')
-        if len(raw_img.shape) > 2:
-            raw_img = imageio.imread(filename, format='tiff-pil', as_gray=True)
-    else:
-        raw_img = imageio.imread(filename)
-        if len(raw_img.shape) > 2:
-            raw_img = imageio.imread(filename, as_gray=True)
-
-    img = imageio.core.image_as_uint(raw_img, bitdepth=bitdepth)
-    return img
-
-
-def write_image(filename, img, format='png'):
-    """Write image."""
-    imageio.imwrite(filename, img, format=format)
 
 
 def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overlayList=True,
