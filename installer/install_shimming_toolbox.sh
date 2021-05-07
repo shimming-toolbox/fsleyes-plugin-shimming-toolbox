@@ -57,7 +57,7 @@ cd ..
 curl -L https://github.com/shimming-toolbox/shimming-toolbox/archive/refs/tags/v0.1-beta.tar.gz > shimming-toolbox-0.1-beta.tar.gz
 gunzip -c shimming-toolbox-0.1-beta.tar.gz | tar xopf -
 cd shimming-toolbox-0.1-beta
-cp config/dcm2bids.json ../fsleyes-plugin-shimming-toolbox/dcm2bids.json
+cp config/dcm2bids.json $ST_DIR/dcm2bids.json
 python -m pip install .
 
 # Create launchers for Python scripts

@@ -35,7 +35,9 @@ from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 
 logger = logging.getLogger(__name__)
 
+HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
+ST_DIR = f"{HOME_DIR}/shimming_toolbox"
 
 DIR = os.path.dirname(__file__)
 
@@ -1047,7 +1049,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Config Path",
                 "button_function": "select_file",
-                "default_text": os.path.join(CURR_DIR,
+                "default_text": os.path.join(ST_DIR,
                                              "dcm2bids.json"),
                 "name": "config",
                 "info_text": "Full file path and name of the BIDS config file"
