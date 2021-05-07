@@ -1,5 +1,7 @@
 import subprocess
 import logging
+import os
+from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
@@ -23,3 +25,16 @@ def run_subprocess(cmd):
     except subprocess.CalledProcessError as err:
         msg = "Return code: ", err.returncode, "\nOutput: ", err.stderr
         raise Exception(msg)
+
+
+def get_folder(path):
+    """Given a path, get the path to the folder."""
+    if is_file(path):
+        return os.path.split(path)[0]
+    else:
+        return path
+
+
+def is_file(path):
+    """Check if a given path is a file."""
+    return '.' in Path(path).name

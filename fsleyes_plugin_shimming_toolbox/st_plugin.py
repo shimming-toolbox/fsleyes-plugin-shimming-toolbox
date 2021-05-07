@@ -28,9 +28,8 @@ import abc
 import tempfile
 import logging
 import imageio
-from pathlib import Path
 
-from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
+from fsleyes_plugin_shimming_toolbox.utils import run_subprocess, get_folder
 
 
 logger = logging.getLogger(__name__)
@@ -1363,14 +1362,3 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
-
-
-def get_folder(path):
-    if is_file(path):
-        return os.path.split(path)[0]
-    else:
-        return path
-
-
-def is_file(path):
-    return '.' in Path(path).name
