@@ -38,14 +38,18 @@ DISPLAY_UPDATE_PATH="export PATH=\"$ST_DIR/$BIN_DIR:\$PATH\""
 # Installation text to insert in shell config file
 function edit_shellrc() {
   # Write text common to all shells
-  (
-    echo
-    echo ""
-    echo "# SHIMMINGTOOLBOX (installed on $(date +%Y-%m-%d\ %H:%M:%S))"
-    echo "$DISPLAY_UPDATE_PATH"
-    echo "export ST_DIR=$ST_DIR"
-    echo ""
-  ) >> "$RC_FILE_PATH"
+  if ! grep -Fq "SHIMMINGTOOLBOX (installed on" $RC_FILE_PATH; then
+      (
+        echo
+        echo ""
+        echo "# SHIMMINGTOOLBOX (installed on $(date +%Y-%m-%d\ %H:%M:%S))"
+        echo "$DISPLAY_UPDATE_PATH"
+        echo "export ST_DIR=$ST_DIR"
+        echo ""
+      ) >> "$RC_FILE_PATH"
+      else
+          echo "$RC_FILE_PATH file already updated from previous install, continuing to next step."
+  fi
 }
 
 source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
