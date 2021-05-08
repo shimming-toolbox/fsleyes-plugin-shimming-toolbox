@@ -1,4 +1,6 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
 """Shimming Toolbox FSLeyes Plugin
 
 This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into FSLeyes:
@@ -18,7 +20,6 @@ import wx
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
 
-
 import numpy as np
 import webbrowser
 import nibabel as nib
@@ -27,10 +28,18 @@ import abc
 import tempfile
 import logging
 import imageio
-import subprocess
+from pathlib import Path
 
-__dir_shimmingtoolbox__ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
+
+
 logger = logging.getLogger(__name__)
+
+HOME_DIR = str(Path.home())
+CURR_DIR = os.getcwd()
+ST_DIR = f"{HOME_DIR}/shimming_toolbox"
+
+DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
 
@@ -229,8 +238,7 @@ class InfoComponent(Component):
         Retunrs:
             wx.StaticBitmap: The ``ShimmingToolbox`` logo
         """
-        fname_st_logo = os.path.join(__dir_shimmingtoolbox__, 'docs', 'source', '_static',
-                                     'shimming_toolbox_logo.png')
+        fname_st_logo = os.path.join(DIR, 'img', 'shimming_toolbox_logo.png')
 
         png = wx.Image(fname_st_logo, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
         png.SetSize((png.GetWidth()*scale, png.GetHeight()*scale))
@@ -452,6 +460,7 @@ class RunComponent(Component):
         try:
             command, msg = self.get_run_args(self.st_function)
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
+            self.create_output_folder()
             run_subprocess(command)
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
@@ -479,6 +488,17 @@ class RunComponent(Component):
                         window.overlayList.append(img_overlay)
                 except Exception as err:
                     self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
+
+    def create_output_folder(self):
+        """Recursively create output folder if it does not exist."""
+        for output_path in self.output_paths:
+            output_folder = get_folder(output_path)
+            if not os.path.exists(output_folder):
+                self.panel.terminal_component.log_to_terminal(
+                    f"Creating folder {output_folder}",
+                    level="INFO"
+                )
+                os.makedirs(output_folder)
 
     def get_run_args(self, st_function):
         msg = "Running "
@@ -634,7 +654,7 @@ class ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_zshim(self, metadata=None):
-        path_output = os.path.join(__dir_shimmingtoolbox__, "output_rt_zshim")
+        path_output = os.path.join(CURR_DIR, "output_rt_zshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -736,6 +756,8 @@ class FieldMapTab(Tab):
                 "option_value": "QGU"
             }
         ]
+        path_output = os.path.join(CURR_DIR, "output_fieldmap")
+
         input_text_box_metadata_prelude = [
             {
                 "button_label": "Input Magnitude",
@@ -767,10 +789,7 @@ class FieldMapTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
-                    "output_fieldmap",
-                    "fieldmap.nii.gz"),
+                "default_text": os.path.join(path_output, "fieldmap.nii.gz"),
                 "name": "output",
                 "info_text": "Output filename for the fieldmap, supported types : '.nii', '.nii.gz'",
                 "required": True
@@ -882,6 +901,7 @@ class MaskTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_threshold(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "output_mask_threshold")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -901,11 +921,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
-                    "output_mask_threshold",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -920,6 +936,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_rect(self):
+        path_output = os.path.join(CURR_DIR, "output_mask_rect")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -946,11 +963,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
-                    "output_mask_rect",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -965,6 +978,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_box(self):
+        path_output = os.path.join(CURR_DIR, "output_mask_box")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -991,11 +1005,7 @@ class MaskTab(Tab):
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
-                "default_text": os.path.join(
-                    __dir_shimmingtoolbox__,
-                    "output_mask_box",
-                    "mask.nii.gz"
-                ),
+                "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
                 "info_text": """Name of output mask. Supported extensions are .nii or .nii.gz."""
             }
@@ -1021,6 +1031,7 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Process dicoms into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
+        path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
             {
                 "button_label": "Input Folder",
@@ -1038,8 +1049,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Config Path",
                 "button_function": "select_file",
-                "default_text": os.path.join(__dir_shimmingtoolbox__,
-                                             "config",
+                "default_text": os.path.join(ST_DIR,
                                              "dcm2bids.json"),
                 "name": "config",
                 "info_text": "Full file path and name of the BIDS config file"
@@ -1047,7 +1057,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
-                "default_text": os.path.join(__dir_shimmingtoolbox__, "output_dicom_to_nifti"),
+                "default_text": path_output,
                 "name": "output",
                 "info_text": "Output path for NIfTI files."
             }
@@ -1136,7 +1146,7 @@ class TextWithButton:
 
 def create_asterisk_icon(panel):
     bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION)
-    info_icon = os.path.join(__dir_shimmingtoolbox__, 'shimmingtoolbox', 'gui', 'asterisk.png')
+    info_icon = os.path.join(DIR, 'img', 'asterisk.png')
     img = wx.Image(info_icon, wx.BITMAP_TYPE_ANY)
     bmp = img.ConvertToBitmap()
     image = wx.StaticBitmap(panel, bitmap=bmp)
@@ -1145,7 +1155,7 @@ def create_asterisk_icon(panel):
 
 def create_info_icon(panel, info_text=""):
     bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION)
-    info_icon = os.path.join(__dir_shimmingtoolbox__, 'shimmingtoolbox', 'gui', 'info-icon.png')
+    info_icon = os.path.join(DIR, 'img', 'info-icon.png')
     img = wx.Image(info_icon, wx.BITMAP_TYPE_ANY)
     bmp = img.ConvertToBitmap()
     image = InfoIcon(panel, bitmap=bmp, info_text=info_text)
@@ -1168,7 +1178,7 @@ class InfoIcon(wx.StaticBitmap):
 
 def select_folder(event, ctrl):
     """Select a file folder from system path."""
-    dlg = wx.DirDialog(None, "Choose Directory", __dir_shimmingtoolbox__,
+    dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR,
                        wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
@@ -1181,7 +1191,7 @@ def select_file(event, ctrl):
     """Select a file from system path."""
     dlg = wx.FileDialog(parent=None,
                         message="Select File",
-                        defaultDir=__dir_shimmingtoolbox__,
+                        defaultDir=CURR_DIR,
                         style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
@@ -1305,27 +1315,6 @@ def write_image(filename, img, format='png'):
     imageio.imwrite(filename, img, format=format)
 
 
-# TODO: find a better way to include this as it is defined in utils as well
-def run_subprocess(cmd):
-    """Wrapper for ``subprocess.run()`` that enables to input ``cmd`` as a full string (easier for debugging).
-
-    Args:
-        cmd (string): full command to be run on the command line
-    """
-    logging.debug(f'{cmd}')
-    try:
-        subprocess.run(
-            cmd.split(' '),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True
-        )
-    except subprocess.CalledProcessError as err:
-        msg = "Return code: ", err.returncode, "\nOutput: ", err.stderr
-        raise Exception(msg)
-
-
 def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overlayList=True,
                              colormap="greyscale"):
     """Convert a 2D image into a NIfTI image and load it as an overlay.
@@ -1376,3 +1365,14 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
+
+
+def get_folder(path):
+    if is_file(path):
+        return os.path.split(path)[0]
+    else:
+        return path
+
+
+def is_file(path):
+    return '.' in Path(path).name
