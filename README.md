@@ -92,9 +92,15 @@ cd testing/vagrant_{OS}
 vagrant up
 ```
 
-Next, ssh into the shell and run the `fsleyes-plugin-shimming-toolbox` installer:
+Next, ssh into the shell:
+
 ```
-cd src/fsleyes-plugin/shimming-toolbox/
+vagrant ssh
+```
+
+and run the `fsleyes-plugin-shimming-toolbox` installer:
+```
+cd src/fsleyes-plugin-shimming-toolbox/
 sudo make install
 source /Users/vagrant/.bashrc
 ```
