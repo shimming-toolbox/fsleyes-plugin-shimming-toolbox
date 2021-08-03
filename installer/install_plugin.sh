@@ -104,7 +104,7 @@ conda activate $VENV
 
 # Install fsleyes
 print info "Installing fsleyes"
-yes | conda install -c conda-forge fsleyes=0.34.2
+yes | conda install -c conda-forge fsleyes=1.0.15
 
 # Downgrade wxpython version due to bugs
 print info "Downgrading wxpython to 4.0.7"
