@@ -57,7 +57,7 @@ source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
 conda activate $VENV
 # set -u
 
-cd ..
+cd $ST_DIR
 curl -L https://github.com/shimming-toolbox/shimming-toolbox/archive/refs/tags/v0.1-beta.tar.gz > shimming-toolbox-0.1-beta.tar.gz
 gunzip -c shimming-toolbox-0.1-beta.tar.gz | tar xopf -
 cd shimming-toolbox-0.1-beta
