@@ -3,8 +3,7 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source $SCRIPT_DIR/utils.sh
 
-VENV_ID=1267b18e73341ad94da34474
-VENV=pst_venv_$VENV_ID
+VENV=pst_venv
 
 rm -rf "$TMP_DIR"
 
