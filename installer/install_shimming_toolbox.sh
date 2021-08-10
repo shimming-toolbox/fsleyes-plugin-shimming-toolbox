@@ -1,33 +1,15 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+source $SCRIPT_DIR/utils.sh
+
 set -e
 
-VENV_ID=1267b18e73341ad94da34474
-VENV=pst_venv_$VENV_ID
+VENV=pst_venv
 ST_DIR=$HOME/shimming_toolbox
 PYTHON_DIR=python
 BIN_DIR=bin
 
-# Gets the shell rc file path based on the default shell.
-# @output: THE_RC and RC_FILE_PATH vars are modified
-function get_shell_rc_path() {
-  if [[ "$SHELL" == *"bash"* ]]; then
-    THE_RC="bash"
-    RC_FILE_PATH="$HOME/.bashrc"
-  elif [[ "$SHELL" == *"/sh"* ]]; then
-    THE_RC="bash"
-    RC_FILE_PATH="$HOME/.bashrc"
-  elif [[ "$SHELL" == *"zsh"* ]]; then
-    THE_RC="bash"
-    RC_FILE_PATH="$HOME/.zshrc"
-  elif [[ "$SHELL" == *"csh"* ]]; then
-    THE_RC="csh"
-    RC_FILE_PATH="$HOME/.cshrc"
-  else
-    find ~/.* -maxdepth 0 -type f
-    die "ERROR: Shell was not recognized: $SHELL"
-  fi
-}
 
 # Define sh files
 get_shell_rc_path
@@ -57,7 +39,7 @@ source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
 conda activate $VENV
 # set -u
 
-cd ..
+cd $ST_DIR
 curl -L https://github.com/shimming-toolbox/shimming-toolbox/archive/refs/tags/v0.1-beta.tar.gz > shimming-toolbox-0.1-beta.tar.gz
 gunzip -c shimming-toolbox-0.1-beta.tar.gz | tar xopf -
 cd shimming-toolbox-0.1-beta
