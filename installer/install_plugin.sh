@@ -6,7 +6,7 @@ source $SCRIPT_DIR/utils.sh
 set -e
 
 VENV=pst_venv
-ST_DIR=$HOME/shimming_toolbox
+ST_DIR=$HOME/shimming-toolbox
 PYTHON_DIR=python
 BIN_DIR=bin
 

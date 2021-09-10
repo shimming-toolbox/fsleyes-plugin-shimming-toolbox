@@ -8,7 +8,7 @@ VENV=pst_venv
 rm -rf "$TMP_DIR"
 
 TMP_DIR="$(mktemp -d 2>/dev/null || mktemp -d -t 'TMP_DIR')"
-ST_DIR="$HOME/shimming_toolbox"
+ST_DIR="$HOME/shimming-toolbox"
 PYTHON_DIR="python"
 
 
