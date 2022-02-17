@@ -24,8 +24,6 @@ function edit_shellrc() {
         echo
         echo ""
         echo "# FSLEYES_PLUGIN_SHIMMING_TOOLBOX (installed on $(date +%Y-%m-%d\ %H:%M:%S))"
-        echo "$DISPLAY_UPDATE_PATH"
-        echo "export ST_DIR=$ST_DIR"
         echo "alias shimming-toolbox='$ST_DIR/$BIN_DIR/shimming-toolbox.sh'"
         echo ""
       ) >> "$RC_FILE_PATH"
@@ -62,5 +60,3 @@ cp shimming-toolbox.sh $ST_DIR/$BIN_DIR/ # || die "Problem creating launchers!"
 export PATH=$ST_DIR/$BIN_DIR:$PATH
 
 edit_shellrc
-
-print info "Open a new Terminal window to load environment variables, or run: source $RC_FILE_PATH"
