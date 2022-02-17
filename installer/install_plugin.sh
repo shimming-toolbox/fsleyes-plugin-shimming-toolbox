@@ -24,7 +24,7 @@ function edit_shellrc() {
         echo
         echo ""
         echo "# FSLEYES_PLUGIN_SHIMMING_TOOLBOX (installed on $(date +%Y-%m-%d\ %H:%M:%S))"
-        echo "alias shimming-toolbox='$ST_DIR/$BIN_DIR/shimming-toolbox.sh'"
+        echo "alias shimming-toolbox='bash $ST_DIR/$BIN_DIR/shimming-toolbox.sh'"
         echo ""
       ) >> "$RC_FILE_PATH"
       else
