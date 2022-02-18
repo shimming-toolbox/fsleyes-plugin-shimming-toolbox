@@ -32,7 +32,6 @@ from pathlib import Path
 
 from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 
-
 logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
@@ -87,11 +86,11 @@ class STControlPanel(ctrlpanel.ControlPanel):
             caption (str): (optional) caption of the message box.
         """
         with wx.MessageDialog(
-            self,
-            message,
-            caption=caption,
-            style=wx.OK | wx.CENTRE,
-            pos=wx.DefaultPosition,
+                self,
+                message,
+                caption=caption,
+                style=wx.OK | wx.CENTRE,
+                pos=wx.DefaultPosition,
         ) as msg:
             msg.ShowModal()
 
@@ -155,7 +154,7 @@ class TabPanel(wx.Panel):
         tab1 = DicomToNiftiTab(nb)
         tab2 = FieldMapTab(nb)
         tab3 = MaskTab(nb)
-        tab4 = ShimTab(nb)
+        tab4 = B0ShimTab(nb)
 
         # Add the windows to tabs and name them.
         nb.AddPage(tab1, tab1.title)
@@ -241,7 +240,7 @@ class InfoComponent(Component):
         fname_st_logo = os.path.join(DIR, 'img', 'shimming_toolbox_logo.png')
 
         png = wx.Image(fname_st_logo, wx.BITMAP_TYPE_ANY).ConvertToBitmap()
-        png.SetSize((png.GetWidth()*scale, png.GetHeight()*scale))
+        png.SetSize((png.GetWidth() * scale, png.GetHeight() * scale))
         logo_image = wx.StaticBitmap(
             parent=self.panel,
             id=-1,
@@ -362,7 +361,7 @@ class DropdownComponent(Component):
         self.on_choice(None)
 
     def create_dropdown_sizers(self):
-        for index in range(len(self.dropdown_choices)):
+        for index in range(len(self.list_components)):
             sizer = self.list_components[index].sizer
             self.sizer.Add(sizer, 0, wx.EXPAND)
             self.positions[self.dropdown_choices[index]] = self.sizer.GetItemCount() - 1
@@ -397,7 +396,11 @@ class DropdownComponent(Component):
             pass
 
         index = self.find_index(selection)
-        self.input_text_boxes = self.list_components[index].input_text_boxes
+        if selection in self.positions.keys():
+            # Add the sizers to the current list of options
+            self.input_text_boxes = self.list_components[index].input_text_boxes
+
+        # Add the dropdown to the list of options
         self.input_text_boxes[self.dropdown_metadata[index]["option_name"]] = \
             [self.dropdown_metadata[index]["option_value"]]
 
@@ -425,6 +428,7 @@ class RunComponent(Component):
         output_paths (list of str): file or folder paths containing output from ``st_function``.
 
     """
+
     def __init__(self, panel, st_function, list_components=[], output_paths=[]):
         super().__init__(panel, list_components)
         self.st_function = st_function
@@ -546,7 +550,7 @@ class RunComponent(Component):
 
         # Handles options
         for name, args in command_dict_options.items():
-            command += f" -{name}"
+            command += f" --{name}"
             for arg in args:
                 command += f" {arg}"
         msg += command
@@ -566,7 +570,8 @@ class TerminalComponent(Component):
     @terminal.setter
     def terminal(self, terminal):
         if terminal is None:
-            terminal = wx.TextCtrl(self.panel, wx.ID_ANY, size=(500, 300),
+            # TODO: Adjust terminal size according to the length of the page
+            terminal = wx.TextCtrl(self.panel, wx.ID_ANY, size=(500, 600),
                                    style=wx.TE_MULTILINE | wx.TE_READONLY)
             terminal.SetDefaultStyle(wx.TextAttr(wx.WHITE, wx.BLACK))
             terminal.SetBackgroundColour(wx.BLACK)
@@ -587,8 +592,8 @@ class TerminalComponent(Component):
             self.terminal.AppendText(f"{level}: {msg}\n")
 
 
-class ShimTab(Tab):
-    def __init__(self, parent, title="Shim"):
+class B0ShimTab(Tab):
+    def __init__(self, parent, title="B0 Shim"):
 
         description = "Perform B0 shimming.\n\n" \
                       "Select the shimming algorithm from the dropdown list."
@@ -598,12 +603,16 @@ class ShimTab(Tab):
         self.positions = {}
         self.dropdown_metadata = [
             {
-                "name": "RT_ZShim",
-                "sizer_function": self.create_sizer_zshim
+                "name": "Static",
+                "sizer_function": self.create_sizer_static_shim
             },
             {
-                "name": "Nothing",
+                "name": "Realtime",
                 "sizer_function": self.create_sizer_other_algo
+            },
+            {
+                "name": "Gradient Realtime XYZ Shim",
+                "sizer_function": self.create_sizer_gradient_xyzshim
             }
         ]
         self.dropdown_choices = [item["name"] for item in self.dropdown_metadata]
@@ -653,8 +662,280 @@ class ShimTab(Tab):
         self.sizer_run.Add(self.choice_box)
         self.sizer_run.AddSpacer(10)
 
-    def create_sizer_zshim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_rt_zshim")
+    def create_sizer_static_shim(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "output_static_shim")
+        # TODO: --coil
+        input_text_box_metadata_inputs = [
+            {
+                "button_label": "Input Fieldmap",
+                "name": "fmap",
+                "button_function": "select_from_overlay",
+                "info_text": "Static B0 fieldmap.",
+                "required": True
+            },
+            {
+                "button_label": "Input Anat",
+                "name": "anat",
+                "button_function": "select_from_overlay",
+                "info_text": "Filename of the anatomical image to apply the correction.",
+                "required": True
+            },
+            {
+                "button_label": "Input Mask",
+                "name": "mask",
+                "button_function": "select_from_overlay",
+                "info_text": """Mask defining the spatial region to shim.The coordinate system should be the same as
+                                anat's coordinate system."""
+            },
+            {
+                "button_label": "Mask Dilation Kernel Size",
+                "name": "mask-dilation-kernel-size",
+                "info_text": """Number of voxels to consider outside of the masked area. For example, when doing dynamic
+                            shimming with a linear gradient, the coefficient corresponding to the gradient
+                            orthogonal to a single slice cannot be estimated: there must be at least 2 (ideally
+                            3) points to properly estimate the linear term. When using 2nd order or more, more
+                            dilation is necessary.""",
+                "default_text": "3",
+            }
+        ]
+
+        component_inputs = InputComponent(self, input_text_box_metadata_inputs)
+
+        input_text_box_metadata_scanner = [
+            {
+                "button_label": "Scanner constraints",
+                "button_function": "select_file",
+                "name": "scanner-coil-constraints",
+                "info_text": " Constraints for the scanner coil.",
+                # TODO: DEFAULT PATH for constraints
+                "default_text": "",
+            },
+        ]
+        component_scanner = InputComponent(self, input_text_box_metadata_scanner)
+
+        input_text_box_metadata_slice = [
+            {
+                "button_label": "Slice Factor",
+                "name": "slice-factor",
+                "info_text": """Number of slices per shimmed group. For example, if the value is '3', then with the
+                                'sequential' mode, shimming will be performed independently on the following groups: 
+                                {0,1,2}, {3,4,5}, etc. With the mode 'interleaved', it will be: {0,2,4}, {1,3,5},
+                                etc..""",
+                "default_text": "1",
+            },
+        ]
+        component_slice = InputComponent(self, input_text_box_metadata_slice)
+
+        output_metadata = [
+            {
+                "button_label": "Output Folder",
+                "button_function": "select_folder",
+                "default_text": path_output,
+                "name": "output",
+                "info_text": "Directory to output coil text file(s). and figures."
+            }
+        ]
+        component_output = InputComponent(self, output_metadata)
+
+        dropdown_scanner_order_metadata = [
+            {
+                "label": "-1",
+                "option_name": "scanner-coil-order",
+                "option_value": "-1"
+            },
+            {
+                "label": "0",
+                "option_name": "scanner-coil-order",
+                "option_value": "0"
+            },
+            {
+                "label": "1",
+                "option_name": "scanner-coil-order",
+                "option_value": "1"
+            },
+            {
+                "label": "2",
+                "option_name": "scanner-coil-order",
+                "option_value": "2"
+            }
+        ]
+
+        dropdown_scanner_order = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_scanner_order_metadata,
+            name="Scanner Order",
+            info_text="Maximum order of the shim system. Note that specifying 1 will return orders 0 and 1. "
+                      "The 0th order is the f0 frequency."
+        )
+
+        dropdown_ovf_metadata = [
+            {
+                "label": "delta",
+                "option_name": "output-value-format",
+                "option_value": "delta"
+            },
+            {
+                "label": "absolute",
+                "option_name": "output-value-format",
+                "option_value": "absolute"
+            }
+        ]
+
+        dropdown_ovf = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_ovf_metadata,
+            name="Output Value Format",
+            info_text="Coefficient values for the scanner coil. delta: Outputs the change of shim coefficients. "
+                      "absolute: Outputs the absolute coefficient by taking into account the current shim settings. "
+                      "This is effectively initial + shim. Scanner coil coefficients will be in the Shim coordinate "
+                      "system unless the option --output-file-format is set to gradient. The delta value format "
+                      "should be used in that case."
+        )
+
+        dropdown_opt_metadata = [
+            {
+                "label": "Least Squares",
+                "option_name": "optimizer-method",
+                "option_value": "least_squares"
+            },
+            {
+                "label": "Pseudo Inverse",
+                "option_name": "optimizer-method",
+                "option_value": "pseudo_inverse"
+            },
+        ]
+
+        dropdown_opt = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_opt_metadata,
+            name="Optimizer",
+            info_text="Method used by the optimizer. LS will respect the constraints, PS will not respect "
+                      "the constraints"
+        )
+
+        dropdown_slice_metadata = [
+            {
+                "label": "Interleaved",
+                "option_name": "slices",
+                "option_value": "interleaved"
+            },
+            {
+                "label": "Sequential",
+                "option_name": "slices",
+                "option_value": "sequential"
+            },
+            {
+                "label": "Volume",
+                "option_name": "slices",
+                "option_value": "volume"
+            },
+        ]
+
+        dropdown_slice = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_slice_metadata,
+            name="Slice Ordering",
+            info_text="Defines the slice ordering."
+        )
+
+        dropdown_coil_format_metadata = [
+            {
+                "label": "Slicewise per Channel",
+                "option_name": "output-file-format-coil",
+                "option_value": "slicewise-ch"
+            },
+            {
+                "label": "Slicewise per Coil",
+                "option_name": "output-file-format-coil",
+                "option_value": "slicewise-coil"
+            },
+            {
+                "label": "Chronological per Channel",
+                "option_name": "output-file-format-coil",
+                "option_value": "chronological-ch"
+            },
+            {
+                "label": "Chronological per Coil",
+                "option_name": "output-file-format-coil",
+                "option_value": "chronological-coil"
+            },
+        ]
+
+        dropdown_coil_format = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_coil_format_metadata,
+            name="Custom Coil Output Format",
+            info_text="Syntax used to describe the sequence of shim events for custom coils. "
+                      "Use 'slicewise' to output in row 1, 2, 3, etc. the shim coefficients for slice "
+                      "1, 2, 3, etc. Use 'chronological' to output in row 1, 2, 3, etc. the shim value "
+                      "for trigger 1, 2, 3, etc. The trigger is an event sent by the scanner and "
+                      "captured by the controller of the shim amplifier. Use 'ch' to output one "
+                      "file per coil channel (coil1_ch1.txt, coil1_ch2.txt, etc.). Use 'coil' to "
+                      "output one file per coil system (coil1.txt, coil2.txt). In the latter case, "
+                      "all coil channels are encoded across multiple columns in the text file."
+        )
+
+        dropdown_scanner_format_metadata = [
+            {
+                "label": "Slicewise per Channel",
+                "option_name": "output-file-format-scanner",
+                "option_value": "slicewise-ch"
+            },
+            {
+                "label": "Slicewise per Coil",
+                "option_name": "output-file-format-scanner",
+                "option_value": "slicewise-coil"
+            },
+            {
+                "label": "Chronological per Channel",
+                "option_name": "output-file-format-scanner",
+                "option_value": "chronological-ch"
+            },
+            {
+                "label": "Chronological per Coil",
+                "option_name": "output-file-format-scanner",
+                "option_value": "chronological-coil"
+            },
+            {
+                "label": "Gradient per Channel",
+                "option_name": "output-file-format-scanner",
+                "option_value": "gradient"
+            },
+        ]
+
+        dropdown_scanner_format = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_scanner_format_metadata,
+            name="Scanner Output Format",
+            info_text="Syntax used to describe the sequence of shim events for scanner coils. "
+                      "Use 'slicewise' to output in row 1, 2, 3, etc. the shim coefficients for slice "
+                      "1, 2, 3, etc. Use 'chronological' to output in row 1, 2, 3, etc. the shim value "
+                      "for trigger 1, 2, 3, etc. The trigger is an event sent by the scanner and "
+                      "captured by the controller of the shim amplifier. Use 'ch' to output one "
+                      "file per coil channel (coil1_ch1.txt, coil1_ch2.txt, etc.). Use 'coil' to "
+                      "output one file per coil system (coil1.txt, coil2.txt). In the latter case, "
+                      "all coil channels are encoded across multiple columns in the text file. Use "
+                      "'gradient' to output the 1st order in the Gradient CS, otherwise, it outputs in "
+                      "the Shim CS."
+        )
+
+        run_component = RunComponent(
+            panel=self,
+            list_components=[component_inputs, dropdown_opt, component_slice, dropdown_slice, dropdown_scanner_order,
+                             component_scanner, dropdown_scanner_format, dropdown_coil_format, dropdown_ovf,
+                             component_output],
+            st_function="st_b0_shim static",
+            # TODO: output paths
+            output_paths=[]
+        )
+        sizer = run_component.sizer
+        return sizer
+
+    def create_sizer_realtime_shim(self, metadata=None):
+        pass
+
+    def create_sizer_gradient_xyzshim(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "output_gradient_rt_xyzshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -705,7 +986,7 @@ class ShimTab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_realtime_zshim",
+            st_function="st_b0_shim gradient_realtime",
             output_paths=[
                 os.path.join(path_output, "fig_resampled_riro.nii.gz"),
                 os.path.join(path_output, "fig_resampled_static.nii.gz")
@@ -1099,6 +1380,7 @@ class TextWithButton:
         required (bool): if this input is required or not. If True, a red asterisk will be
             placed next to the input text box to indicate this.
     """
+
     def __init__(self, panel, button_label, button_function, name="default", default_text="",
                  n_text_boxes=1, info_text="", required=False):
         self.panel = panel
@@ -1287,6 +1569,73 @@ def add_input_phase_boxes(event, tab, ctrl):
             )
 
     tab.n_echoes = n_echoes
+    tab.Layout()
+
+
+def add_input_coil_boxes(event, tab, ctrl):
+    """On click of ``Number of Custom Coils`` button, add ``n_coils`` ``TextWithButton`` boxes.
+
+    For this function, we are assuming the layout of the Component input is as follows:
+
+        0 - Number of Echoes TextWithButton sizer
+        1 - Spacer
+        2 - next item, and so on
+
+    First, we check and see how many coil boxes the tab currently has, and remove any where
+    n current > n update.
+    Next, we add n = n update - n current coil boxes to the tab.
+
+    Args:
+        event (wx.Event): when the ``Number of Echoes`` button is clicked.
+        tab (FieldMapTab): tab class instance for ``B0 Shim``.
+        ctrl (wx.TextCtrl): the text box containing the number of phase boxes to add. Must be an
+            integer > 0.
+    """
+    # TODO: Fix coils so that it has a second field to input the config file
+    option_name = "arg"
+    try:
+        n_coils = int(ctrl.GetValue())
+        if n_coils < 0:
+            raise Exception()
+    except Exception:
+        tab.terminal_component.log_to_terminal(
+            "Number of Echoes must be an integer >= 0",
+            level="ERROR"
+        )
+        return
+
+    insert_index = 2
+    if n_coils < tab.n_coils:
+        for index in range(tab.n_coils, n_coils, -1):
+            tab.component_input.sizer.Hide(index + 1)
+            tab.component_input.sizer.Remove(index + 1)
+            tab.component_input.remove_last_input_text_box(option_name)
+
+    for index in range(tab.n_coils, n_coils):
+        text_with_button = TextWithButton(
+            panel=tab,
+            button_label=f"Input Coil {index + 1}",
+            button_function="select_from_overlay",
+            default_text="",
+            n_text_boxes=1,
+            name=f"input_coil_{index + 1}",
+            info_text=f"Input path of the coil nifti file {index + 1}",
+            required=True
+        )
+        if index + 1 == n_coils and tab.n_coils == 0:
+            tab.component_input.insert_input_text_box(
+                text_with_button,
+                option_name,
+                index=insert_index + index,
+                last=True)
+        else:
+            tab.component_input.insert_input_text_box(
+                text_with_button,
+                option_name,
+                index=insert_index + index
+            )
+
+    tab.n_coils = n_coils
     tab.Layout()
 
 
