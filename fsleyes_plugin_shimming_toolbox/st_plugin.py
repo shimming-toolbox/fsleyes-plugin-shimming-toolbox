@@ -9,6 +9,7 @@ This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into 
 - mask_cli
 - prepare_fieldmap_cli
 - realtime_zshim_cli
+- st_b1shim
 
 ---------------------------------------------------------------------------------------
 Copyright (c) 2021 Polytechnique Montreal <www.neuro.polymtl.ca>
@@ -34,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
-ST_DIR = f"{HOME_DIR}/shimming_toolbox"
+ST_DIR = f"{HOME_DIR}/shimming-toolbox"
 
 DIR = os.path.dirname(__file__)
 
@@ -821,7 +822,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
             },
             {
@@ -846,7 +847,7 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shm"
+            st_function="st_b1shim"
         )
         sizer = run_component.sizer
         return sizer
@@ -877,7 +878,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
             },
             {
@@ -930,7 +931,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)",
                 "required": True
             },
