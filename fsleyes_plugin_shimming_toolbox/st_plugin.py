@@ -847,7 +847,7 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim"
+            st_function="st_b1shim --algo 1"
         )
         sizer = run_component.sizer
         return sizer
@@ -903,7 +903,7 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim",
+            st_function="st_b1shim --algo 2",
             output_paths=[
                 os.path.join(path_output, "fig_resampled_riro.nii.gz"),
                 os.path.join(path_output, "fig_resampled_static.nii.gz")
@@ -957,7 +957,7 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim"
+            st_function="st_b1shim --algo 3"
         )
         sizer = run_component.sizer
         return sizer
@@ -977,12 +977,6 @@ class B1Tab(Tab):
                 "name": "mask",
                 "button_function": "select_from_overlay",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
-            },
-            {
-                "button_label": "Input VOP file",
-                "name": "vop",
-                "button_function": "select_from_overlay",
-                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
             },
             {
                 "button_label": "Output Folder",
