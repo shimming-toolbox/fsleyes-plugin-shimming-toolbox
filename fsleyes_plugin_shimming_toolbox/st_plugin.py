@@ -816,7 +816,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -865,7 +865,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -925,7 +925,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -975,7 +975,7 @@ class B1Tab(Tab):
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_from_overlay",
+                "button_function": "select_file",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
