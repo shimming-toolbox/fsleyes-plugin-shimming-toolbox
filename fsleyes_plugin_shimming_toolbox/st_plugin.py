@@ -505,24 +505,26 @@ class RunComponent(Component):
                 os.makedirs(output_folder)
 
     def get_run_args(self, st_function):
+        """The option are a list of tuples where the tuple: (name, [value1, value2])"""
         msg = "Running "
         command = st_function
 
         command_list_arguments = []
-        command_dict_options = {}
+        command_list_options = []
         for component in self.list_components:
             for name, input_text_box_list in component.input_text_boxes.items():
                 if name == "no_arg":
                     continue
+
                 for input_text_box in input_text_box_list:
                     # Allows to chose from a dropdown
                     if type(input_text_box) == str:
-                        if name in command_dict_options.keys():
-                            command_dict_options[name].append(input_text_box)
-                        else:
-                            command_dict_options[name] = [input_text_box]
+                        command_list_options.append((name, [input_text_box]))
+
                     # Normal case where input_text_box is a TextwithButton
                     else:
+                        is_arg = False
+                        option_values = []
                         for textctrl in input_text_box.textctrl_list:
                             arg = textctrl.GetValue()
                             if arg == "" or arg is None:
@@ -535,21 +537,25 @@ class RunComponent(Component):
                                 # Case where the option name is set to arg, this handles it as if it were an argument
                                 if name == "arg":
                                     command_list_arguments.append(arg)
+                                    is_arg = True
                                 # Normal options
                                 else:
                                     if name == "output":
                                         self.output_paths.append(arg)
-                                    if name in command_dict_options.keys():
-                                        command_dict_options[name].append(arg)
-                                    else:
-                                        command_dict_options[name] = [arg]
+
+                                    option_values.append(arg)
+
+                        # If its an argument don't include it as an option, if the option list is empty don't either
+                        if not is_arg and option_values:
+                            command_list_options.append((name, option_values))
 
         # Arguments don't need "-"
         for arg in command_list_arguments:
             command += f" {arg}"
 
+        # print(command_list_options)
         # Handles options
-        for name, args in command_dict_options.items():
+        for name, args in command_list_options:
             command += f" --{name}"
             for arg in args:
                 command += f" {arg}"
@@ -617,6 +623,10 @@ class B0ShimTab(Tab):
         ]
         self.dropdown_choices = [item["name"] for item in self.dropdown_metadata]
 
+        # Static shim
+        self.n_coils = 0
+        self.component_coils = None
+
         self.create_choice_box()
 
         self.terminal_component = TerminalComponent(self)
@@ -664,7 +674,18 @@ class B0ShimTab(Tab):
 
     def create_sizer_static_shim(self, metadata=None):
         path_output = os.path.join(CURR_DIR, "output_static_shim")
-        # TODO: --coil
+
+        # no_arg is used here since a --coil option must be used for each of the coils (defined add_input_coil_boxes)
+        input_text_box_metadata_coil = [
+            {
+                "button_label": "Number of Custom Coils",
+                "button_function": "add_input_coil_boxes",
+                "name": "no_arg",
+                "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
+            }
+        ]
+        self.component_coils = InputComponent(self, input_text_box_metadata_coil)
+
         input_text_box_metadata_inputs = [
             {
                 "button_label": "Input Fieldmap",
@@ -921,9 +942,9 @@ class B0ShimTab(Tab):
 
         run_component = RunComponent(
             panel=self,
-            list_components=[component_inputs, dropdown_opt, component_slice, dropdown_slice, dropdown_scanner_order,
-                             component_scanner, dropdown_scanner_format, dropdown_coil_format, dropdown_ovf,
-                             component_output],
+            list_components=[self.component_coils, component_inputs, dropdown_opt, component_slice, dropdown_slice,
+                             dropdown_scanner_order, component_scanner, dropdown_scanner_format, dropdown_coil_format,
+                             dropdown_ovf, component_output],
             st_function="st_b0_shim static",
             # TODO: output paths
             output_paths=[]
@@ -1405,16 +1426,23 @@ class TextWithButton:
             if i_text_box == 0:
                 if self.button_function == "select_folder":
                     self.button_function = lambda event, ctrl=textctrl: select_folder(event, ctrl)
+                    button.Bind(wx.EVT_BUTTON, self.button_function)
                 elif self.button_function == "select_file":
                     self.button_function = lambda event, ctrl=textctrl: select_file(event, ctrl)
+                    button.Bind(wx.EVT_BUTTON, self.button_function)
                 elif self.button_function == "select_from_overlay":
                     self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
                         select_from_overlay(event, panel, ctrl)
+                    button.Bind(wx.EVT_BUTTON, self.button_function)
                 elif self.button_function == "add_input_phase_boxes":
                     self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
                         add_input_phase_boxes(event, panel, ctrl)
                     textctrl.Bind(wx.EVT_TEXT, self.button_function)
-                button.Bind(wx.EVT_BUTTON, self.button_function)
+                elif self.button_function == "add_input_coil_boxes":
+                    self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
+                        add_input_coil_boxes(event, panel, ctrl)
+                    textctrl.Bind(wx.EVT_TEXT, self.button_function)
+
                 text_with_button_box.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
 
             text_with_button_box.Add(textctrl, 1, wx.ALIGN_LEFT | wx.LEFT, 10)
@@ -1539,7 +1567,7 @@ def add_input_phase_boxes(event, tab, ctrl):
 
     insert_index = 2
     if n_echoes < tab.n_echoes:
-        for index in range(tab.n_echoes, n_echoes, -1):
+        for index in range(tab.n_echoes, n_echoes, - 1):
             tab.component_input.sizer.Hide(index + 1)
             tab.component_input.sizer.Remove(index + 1)
             tab.component_input.remove_last_input_text_box(option_name)
@@ -1577,7 +1605,7 @@ def add_input_coil_boxes(event, tab, ctrl):
 
     For this function, we are assuming the layout of the Component input is as follows:
 
-        0 - Number of Echoes TextWithButton sizer
+        0 - Number of Coils TextWithButton sizer
         1 - Spacer
         2 - next item, and so on
 
@@ -1587,12 +1615,12 @@ def add_input_coil_boxes(event, tab, ctrl):
 
     Args:
         event (wx.Event): when the ``Number of Echoes`` button is clicked.
-        tab (FieldMapTab): tab class instance for ``B0 Shim``.
+        tab (B0ShimTab): tab class instance for ``B0 Shim``.
         ctrl (wx.TextCtrl): the text box containing the number of phase boxes to add. Must be an
             integer > 0.
     """
-    # TODO: Fix coils so that it has a second field to input the config file
-    option_name = "arg"
+
+    option_name = "coil"
     try:
         n_coils = int(ctrl.GetValue())
         if n_coils < 0:
@@ -1602,14 +1630,21 @@ def add_input_coil_boxes(event, tab, ctrl):
             "Number of Echoes must be an integer >= 0",
             level="ERROR"
         )
-        return
+        n_coils = 0
 
     insert_index = 2
+    # If we have to remove coils
     if n_coils < tab.n_coils:
-        for index in range(tab.n_coils, n_coils, -1):
-            tab.component_input.sizer.Hide(index + 1)
-            tab.component_input.sizer.Remove(index + 1)
-            tab.component_input.remove_last_input_text_box(option_name)
+        for index in range(tab.n_coils, n_coils, - 1):
+            tab.component_coils.sizer.Hide(index + 1)
+            tab.component_coils.sizer.Remove(index + 1)
+            tab.component_coils.remove_last_input_text_box(option_name)
+
+        # Delete the last spacer if we go back to n_coils == 0
+        if n_coils == 0:
+            index = 2
+            tab.component_coils.sizer.Hide(index)
+            tab.component_coils.sizer.Remove(index)
 
     for index in range(tab.n_coils, n_coils):
         text_with_button = TextWithButton(
@@ -1617,19 +1652,21 @@ def add_input_coil_boxes(event, tab, ctrl):
             button_label=f"Input Coil {index + 1}",
             button_function="select_from_overlay",
             default_text="",
-            n_text_boxes=1,
+            n_text_boxes=2,
             name=f"input_coil_{index + 1}",
             info_text=f"Input path of the coil nifti file {index + 1}",
             required=True
         )
+        # Add a spacer at the end if its the last one and if there were none previously
+        # i.e. if it was previously n_coils == 0
         if index + 1 == n_coils and tab.n_coils == 0:
-            tab.component_input.insert_input_text_box(
+            tab.component_coils.insert_input_text_box(
                 text_with_button,
                 option_name,
                 index=insert_index + index,
                 last=True)
         else:
-            tab.component_input.insert_input_text_box(
+            tab.component_coils.insert_input_text_box(
                 text_with_button,
                 option_name,
                 index=insert_index + index
