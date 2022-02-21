@@ -20,6 +20,6 @@ curl -L "https://github.com/shimming-toolbox/shimming-toolbox/archive/${ST_VERSI
 # unzip for now, when we use releases we can use the tar and gunzip
 unzip -o "shimming-toolbox-${ST_VERSION}.zip"
 cd "shimming-toolbox-${ST_VERSION}"
-make install
+make install CLEAN=false
 
 print info "To launch the plugin, load the environment variables then run: shimming-toolbox"
