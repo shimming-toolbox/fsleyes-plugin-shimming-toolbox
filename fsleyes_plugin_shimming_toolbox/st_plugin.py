@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
-ST_DIR = f"{HOME_DIR}/shimming_toolbox"
+ST_DIR = f"{HOME_DIR}/shimming-toolbox"
 
 DIR = os.path.dirname(__file__)
 
@@ -673,7 +673,7 @@ class B0ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_static_shim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_static_shim")
+        path_output = os.path.join(ST_DIR, "output_static_shim")
 
         # no_arg is used here since a --coil option must be used for each of the coils (defined add_input_coil_boxes)
         input_text_box_metadata_coil = [
@@ -956,7 +956,7 @@ class B0ShimTab(Tab):
         pass
 
     def create_sizer_gradient_xyzshim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_gradient_rt_xyzshim")
+        path_output = os.path.join(ST_DIR, "output_gradient_rt_xyzshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -1058,28 +1058,8 @@ class FieldMapTab(Tab):
                 "option_value": "QGU"
             }
         ]
-        path_output = os.path.join(CURR_DIR, "output_fieldmap")
+        path_output = os.path.join(ST_DIR, "output_fieldmap")
 
-        input_text_box_metadata_prelude = [
-            {
-                "button_label": "Input Magnitude",
-                "button_function": "select_from_overlay",
-                "name": "mag",
-                "info_text": "Input path of mag NIfTI file.",
-                "required": True
-            },
-            {
-                "button_label": "Threshold",
-                "name": "threshold",
-                "info_text": "Float threshold for masking. Used for: PRELUDE."
-            },
-            {
-                "button_label": "Input Mask",
-                "button_function": "select_from_overlay",
-                "name": "mask",
-                "info_text": "Input path for a mask. Used for PRELUDE"
-            }
-        ]
         input_text_box_metadata_other = [
             {
                 "button_label": "Other",
@@ -1097,15 +1077,38 @@ class FieldMapTab(Tab):
                 "required": True
             }
         ]
-
+        input_text_box_metadata_input2 = [
+            {
+                "button_label": "Input Magnitude",
+                "button_function": "select_from_overlay",
+                "name": "mag",
+                "info_text": "Input path of mag NIfTI file.",
+                "required": True
+            },
+            {
+                "button_label": "Threshold",
+                "name": "threshold",
+                "info_text": "Float threshold for masking. Must be between 0 and 1"
+            },
+            {
+                "button_label": "Input Mask",
+                "button_function": "select_from_overlay",
+                "name": "mask",
+                "info_text": "Input path for a mask. Use either a threshold or a mask."
+            }
+        ]
         self.terminal_component = TerminalComponent(panel=self)
         self.component_input = InputComponent(
             panel=self,
             input_text_box_metadata=input_text_box_metadata_input
         )
+        self.component_input2 = InputComponent(
+            panel=self,
+            input_text_box_metadata=input_text_box_metadata_input2
+        )
         self.component_prelude = InputComponent(
             panel=self,
-            input_text_box_metadata=input_text_box_metadata_prelude
+            input_text_box_metadata=[]
         )
         self.component_other = InputComponent(
             panel=self,
@@ -1124,7 +1127,7 @@ class FieldMapTab(Tab):
         )
         self.run_component = RunComponent(
             panel=self,
-            list_components=[self.component_input, self.dropdown, self.component_output],
+            list_components=[self.component_input, self.component_input2, self.dropdown, self.component_output],
             st_function="st_prepare_fieldmap"
         )
         self.sizer_run = self.run_component.sizer
@@ -1203,7 +1206,7 @@ class MaskTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_threshold(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_mask_threshold")
+        path_output = os.path.join(ST_DIR, "output_mask_threshold")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1238,7 +1241,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_rect(self):
-        path_output = os.path.join(CURR_DIR, "output_mask_rect")
+        path_output = os.path.join(ST_DIR, "output_mask_rect")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1280,7 +1283,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_box(self):
-        path_output = os.path.join(CURR_DIR, "output_mask_box")
+        path_output = os.path.join(ST_DIR, "output_mask_box")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1333,7 +1336,7 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Process dicoms into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
-        path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
+        path_output = os.path.join(ST_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
             {
                 "button_label": "Input Folder",
@@ -1351,8 +1354,7 @@ class DicomToNiftiTab(Tab):
             {
                 "button_label": "Config Path",
                 "button_function": "select_file",
-                "default_text": os.path.join(ST_DIR,
-                                             "dcm2bids.json"),
+                "default_text": os.path.join(ST_DIR, "dcm2bids.json"),
                 "name": "config",
                 "info_text": "Full file path and name of the BIDS config file"
             },
@@ -1391,7 +1393,8 @@ class TextWithButton:
 
         panel: TODO
         button_label (str): label to be put on the button.
-        button_function: function which gets called when the button is clicked on.
+        button_function: function which gets called when the button is clicked on. If it's a list, assign to the
+                         'n_text_boxes'
         default_text (str): (optional) default text to be displayed in the input text box.
         textctrl_list (list wx.TextCtrl): list of input text boxes, can be more than one in a row.
         n_text_boxes (int): number of input text boxes to create.
@@ -1406,6 +1409,8 @@ class TextWithButton:
                  n_text_boxes=1, info_text="", required=False):
         self.panel = panel
         self.button_label = button_label
+        if type(button_function) is not list:
+            button_function = [button_function]
         self.button_function = button_function
         self.default_text = default_text
         self.textctrl_list = []
@@ -1423,28 +1428,40 @@ class TextWithButton:
         for i_text_box in range(0, self.n_text_boxes):
             textctrl = wx.TextCtrl(parent=self.panel, value=self.default_text, name=self.name)
             self.textctrl_list.append(textctrl)
-            if i_text_box == 0:
-                if self.button_function == "select_folder":
-                    self.button_function = lambda event, ctrl=textctrl: select_folder(event, ctrl)
-                    button.Bind(wx.EVT_BUTTON, self.button_function)
-                elif self.button_function == "select_file":
-                    self.button_function = lambda event, ctrl=textctrl: select_file(event, ctrl)
-                    button.Bind(wx.EVT_BUTTON, self.button_function)
-                elif self.button_function == "select_from_overlay":
-                    self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
-                        select_from_overlay(event, panel, ctrl)
-                    button.Bind(wx.EVT_BUTTON, self.button_function)
-                elif self.button_function == "add_input_phase_boxes":
-                    self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
-                        add_input_phase_boxes(event, panel, ctrl)
-                    textctrl.Bind(wx.EVT_TEXT, self.button_function)
-                elif self.button_function == "add_input_coil_boxes":
-                    self.button_function = lambda event, panel=self.panel, ctrl=textctrl: \
-                        add_input_coil_boxes(event, panel, ctrl)
-                    textctrl.Bind(wx.EVT_TEXT, self.button_function)
 
-                text_with_button_box.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
+        if len(self.button_function) > self.n_text_boxes:
+            raise RuntimeError("button_function has more functions than the number of input boxes")
 
+        if len(self.button_function) == 1:
+            focus = False
+        else:
+            focus = True
+
+        for i, button_function in enumerate(self.button_function):
+            if button_function == "select_folder":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
+                    select_folder(event, panel, ctrl, focus)
+                button.Bind(wx.EVT_BUTTON, function)
+            elif button_function == "select_file":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
+                    select_file(event, panel, ctrl, focus)
+                button.Bind(wx.EVT_BUTTON, function)
+            elif button_function == "select_from_overlay":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
+                    select_from_overlay(event, panel, ctrl, focus)
+                button.Bind(wx.EVT_BUTTON, function)
+            elif button_function == "add_input_phase_boxes":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
+                    add_input_phase_boxes(event, panel, ctrl)
+                self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
+            elif button_function == "add_input_coil_boxes":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
+                    add_input_coil_boxes(event, panel, ctrl)
+                self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
+
+        text_with_button_box.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
+
+        for textctrl in self.textctrl_list:
             text_with_button_box.Add(textctrl, 1, wx.ALIGN_LEFT | wx.LEFT, 10)
             if self.required:
                 text_with_button_box.Add(
@@ -1486,8 +1503,22 @@ class InfoIcon(wx.StaticBitmap):
         super(wx.StaticBitmap, self).__init__(panel, bitmap=bitmap)
 
 
-def select_folder(event, ctrl):
+def select_folder(event, tab, ctrl, focus=False):
     """Select a file folder from system path."""
+    if focus:
+        # Skip allows to handle other events
+        focused = wx.Window.FindFocus()
+        if ctrl != focused:
+            if focused == tab:
+                tab.terminal_component.log_to_terminal(
+                    "Select a text box from the same row.",
+                    level="INFO"
+                )
+                # If its the tab, don't handle the other events so that the log message is only once
+                return
+            event.Skip()
+            return
+
     dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR,
                        wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
@@ -1496,9 +1527,26 @@ def select_folder(event, ctrl):
         ctrl.SetValue(folder)
         logger.info(f"Folder set to: {folder}")
 
+    # Skip allows to handle other events
+    event.Skip()
 
-def select_file(event, ctrl):
+
+def select_file(event, tab, ctrl, focus=False):
     """Select a file from system path."""
+    if focus:
+        # Skip allows to handle other events
+        focused = wx.Window.FindFocus()
+        if ctrl != focused:
+            if focused == tab:
+                tab.terminal_component.log_to_terminal(
+                    "Select a text box from the same row.",
+                    level="INFO"
+                )
+                # If its the tab, don't handle the other events so that the log message is only once
+                return
+            event.Skip()
+            return
+
     dlg = wx.FileDialog(parent=None,
                         message="Select File",
                         defaultDir=CURR_DIR,
@@ -1509,15 +1557,32 @@ def select_file(event, ctrl):
         ctrl.SetValue(path)
         logger.info(f"File set to: {path}")
 
+    # Skip allows to handle other events
+    event.Skip()
 
-def select_from_overlay(event, tab, ctrl):
+
+def select_from_overlay(event, tab, ctrl, focus=False):
     """Fetch path to file highlighted in the Overlay list.
 
     Args:
         event (wx.Event): event passed to a callback or member function.
         tab (Tab): Must be a subclass of the Tab class
         ctrl (wx.TextCtrl): the text item.
+        focus (bool): Tells whether the ctrl must be in focus.
     """
+    if focus:
+        # Skip allows to handle other events
+        focused = wx.Window.FindFocus()
+        if ctrl != focused:
+            if focused == tab:
+                tab.terminal_component.log_to_terminal(
+                    "Select a text box from the same row.",
+                    level="INFO"
+                )
+                # If its the tab, don't handle the other events so that the log message is only once
+                return
+            event.Skip()
+            return
 
     # This is messy and wont work if we change any class hierarchy.. using GetTopLevelParent() only
     # works if the pane is not floating
@@ -1532,6 +1597,9 @@ def select_from_overlay(event, tab, ctrl):
             "Import and select an image from the Overlay list",
             level="INFO"
         )
+
+    # Skip allows to handle other events
+    event.Skip()
 
 
 def add_input_phase_boxes(event, tab, ctrl):
@@ -1650,11 +1718,11 @@ def add_input_coil_boxes(event, tab, ctrl):
         text_with_button = TextWithButton(
             panel=tab,
             button_label=f"Input Coil {index + 1}",
-            button_function="select_from_overlay",
+            button_function=["select_from_overlay", "select_file"],
             default_text="",
             n_text_boxes=2,
             name=f"input_coil_{index + 1}",
-            info_text=f"Input path of the coil nifti file {index + 1}",
+            info_text=f"Input path of the coil nifti file followed by json constraint file",
             required=True
         )
         # Add a spacer at the end if its the last one and if there were none previously
