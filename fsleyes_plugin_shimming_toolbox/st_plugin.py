@@ -5,10 +5,10 @@
 
 This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into FSLeyes:
 
-- dicom_to_nifti_cli
-- mask_cli
-- prepare_fieldmap_cli
-- realtime_zshim_cli
+- st_dicom_to_nifti
+- st_mask
+- st_prepare_fieldmap
+- st_b0shim
 
 ---------------------------------------------------------------------------------------
 Copyright (c) 2021 Polytechnique Montreal <www.neuro.polymtl.ca>
@@ -171,7 +171,6 @@ class TabPanel(wx.ScrolledWindow):
         self.SetSizer(sizer)
         self.SetScrollbars(0, 4, 1, 1)
         
-
 
 class Tab(wx.Panel):
     def __init__(self, parent, title, description):
@@ -948,6 +947,7 @@ class B0ShimTab(Tab):
                              dropdown_ovf, component_output],
             st_function="st_b0_shim static",
             # TODO: output paths
+            # fig_shimmed_vs_unshimmed.png
             output_paths=[]
         )
         sizer = run_component.sizer
@@ -1652,14 +1652,14 @@ class TextWithButton:
 
     Attributes:
 
-        panel: TODO
+        panel (wx.Panel): Instance of a Panel, this is usually a Tab
         button_label (str): label to be put on the button.
         button_function: function which gets called when the button is clicked on. If it's a list, assign to the
                          'n_text_boxes'
         default_text (str): (optional) default text to be displayed in the input text box.
         textctrl_list (list wx.TextCtrl): list of input text boxes, can be more than one in a row.
         n_text_boxes (int): number of input text boxes to create.
-        name (str): TODO
+        name (str): name of the cli option
         info_text (str): text to be displayed when hovering over the info icon; should describe
             what the button/input is for.
         required (bool): if this input is required or not. If True, a red asterisk will be
