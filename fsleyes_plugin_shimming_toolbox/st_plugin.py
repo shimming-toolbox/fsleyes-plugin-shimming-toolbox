@@ -61,7 +61,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
         my_panel = TabPanel(self)
         sizer_tabs = wx.BoxSizer(wx.VERTICAL)
         sizer_tabs.SetMinSize(400, 300)
-        sizer_tabs.Add(my_panel, 0, wx.EXPAND)
+        sizer_tabs.Add(my_panel, 1, wx.EXPAND)
 
         # Set the sizer of the control panel
         sizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -146,7 +146,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
         }
 
 
-class TabPanel(wx.Panel):
+class TabPanel(wx.ScrolledWindow):
     def __init__(self, parent):
         super().__init__(parent=parent)
 
@@ -165,9 +165,11 @@ class TabPanel(wx.Panel):
         # Set to the Shim tab
         nb.SetSelection(3)
 
-        sizer = wx.BoxSizer()
+        sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(sizer)
+        self.SetScrollbars(0, 4, 1, 1)
+        
 
 
 class Tab(wx.Panel):
