@@ -809,14 +809,14 @@ class B1Tab(Tab):
             {
                 "button_label": "Input B1+ map",
                 "name": "b1map",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -858,14 +858,14 @@ class B1Tab(Tab):
             {
                 "button_label": "Input B1+ map",
                 "name": "b1map",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -918,14 +918,14 @@ class B1Tab(Tab):
             {
                 "button_label": "Input B1+ map",
                 "name": "b1map",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
@@ -939,10 +939,9 @@ class B1Tab(Tab):
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": """Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max 
-                local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more shimming 
-                liberty but are more likely to result in SAR excess on the scanner.
-                """
+                "info_text": "Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max" 
+                "local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more"
+                "shimming liberty but are more likely to result in SAR excess on the scanner."
             },
             {
                 "button_label": "Output Folder",
@@ -968,14 +967,14 @@ class B1Tab(Tab):
             {
                 "button_label": "Input B1+ maps",
                 "name": "b1map",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "NIfTI file containing the individual B1+ maps, as created by dcm2niix.",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
-                "button_function": "select_file",
+                "button_function": "select_from_overlay",
                 "info_text": "3D NIfTI file used to define the shimming region of interest"
             },
             {
