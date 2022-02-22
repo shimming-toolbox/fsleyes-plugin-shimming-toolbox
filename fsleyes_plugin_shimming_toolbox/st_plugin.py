@@ -730,7 +730,7 @@ class ShimTab(Tab):
 
 
 class B1Tab(Tab):
-    def __init__(self, parent, title=r"B1+ shimming"):
+    def __init__(self, parent, title=r"B1+ Shim"):
 
         description = "Perform B1+ shimming.\n\n" \
                       "Select the shimming algorithm from the dropdown list."
@@ -847,7 +847,8 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim --algo 1"
+            st_function="st_b1shim --algo 1",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
         )
         sizer = run_component.sizer
         return sizer
@@ -904,10 +905,7 @@ class B1Tab(Tab):
             panel=self,
             list_components=[component],
             st_function="st_b1shim --algo 2",
-            output_paths=[
-                os.path.join(path_output, "fig_resampled_riro.nii.gz"),
-                os.path.join(path_output, "fig_resampled_static.nii.gz")
-            ]
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
         )
         sizer = run_component.sizer
         return sizer
@@ -956,7 +954,8 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim --algo 3"
+            st_function="st_b1shim --algo 3",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
         )
         sizer = run_component.sizer
         return sizer
@@ -989,7 +988,8 @@ class B1Tab(Tab):
         run_component = RunComponent(
             panel=self,
             list_components=[component],
-            st_function="st_b1shim --algo 4"
+            st_function="st_b1shim --algo 4",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
         )
         sizer = run_component.sizer
         return sizer
