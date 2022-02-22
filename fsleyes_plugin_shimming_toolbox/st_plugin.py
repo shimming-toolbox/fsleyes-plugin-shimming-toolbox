@@ -423,7 +423,7 @@ class RunComponent(Component):
     """Component which contains input and run button.
 
     Attributes:
-        panel (wx.Panel): TODO.
+        panel (wx.Panel): Panel, this is usually a Tab instance
         st_function (str): Name of the ``Shimming Toolbox`` CLI function to be called.
         list_components (list of Component): list of subcomponents to be added.
         output_paths (list of str): file or folder paths containing output from ``st_function``.
