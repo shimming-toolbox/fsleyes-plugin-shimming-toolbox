@@ -324,7 +324,6 @@ class InputComponent(Component):
         self.input_text_boxes[name].pop(-1)
 
     def button_do_something(self, event):
-        """TODO"""
         pass
 
 
@@ -673,7 +672,7 @@ class B0ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_static_shim(self, metadata=None):
-        path_output = os.path.join(ST_DIR, "output_static_shim")
+        path_output = os.path.join(CURR_DIR, "output_static_shim")
 
         # no_arg is used here since a --coil option must be used for each of the coils (defined add_input_coil_boxes)
         input_text_box_metadata_coil = [
@@ -727,9 +726,8 @@ class B0ShimTab(Tab):
                 "button_label": "Scanner constraints",
                 "button_function": "select_file",
                 "name": "scanner-coil-constraints",
-                "info_text": " Constraints for the scanner coil.",
-                # TODO: DEFAULT PATH for constraints
-                "default_text": "",
+                "info_text": "Constraints for the scanner coil.",
+                "default_text": f"{os.path.join(ST_DIR, 'coil_config.json')}",
             },
         ]
         component_scanner = InputComponent(self, input_text_box_metadata_scanner)
@@ -956,7 +954,7 @@ class B0ShimTab(Tab):
         pass
 
     def create_sizer_gradient_xyzshim(self, metadata=None):
-        path_output = os.path.join(ST_DIR, "output_gradient_rt_xyzshim")
+        path_output = os.path.join(CURR_DIR, "output_gradient_rt_xyzshim")
         input_text_box_metadata = [
             {
                 "button_label": "Input Fieldmap",
@@ -1058,7 +1056,7 @@ class FieldMapTab(Tab):
                 "option_value": "QGU"
             }
         ]
-        path_output = os.path.join(ST_DIR, "output_fieldmap")
+        path_output = os.path.join(CURR_DIR, "output_fieldmap")
 
         input_text_box_metadata_other = [
             {
@@ -1206,7 +1204,7 @@ class MaskTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_threshold(self, metadata=None):
-        path_output = os.path.join(ST_DIR, "output_mask_threshold")
+        path_output = os.path.join(CURR_DIR, "output_mask_threshold")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1241,7 +1239,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_rect(self):
-        path_output = os.path.join(ST_DIR, "output_mask_rect")
+        path_output = os.path.join(CURR_DIR, "output_mask_rect")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1283,7 +1281,7 @@ class MaskTab(Tab):
         return sizer
 
     def create_sizer_box(self):
-        path_output = os.path.join(ST_DIR, "output_mask_box")
+        path_output = os.path.join(CURR_DIR, "output_mask_box")
         input_text_box_metadata = [
             {
                 "button_label": "Input",
@@ -1336,7 +1334,7 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Process dicoms into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
-        path_output = os.path.join(ST_DIR, "output_dicom_to_nifti")
+        path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
             {
                 "button_label": "Input Folder",
