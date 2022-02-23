@@ -19,6 +19,7 @@ Authors: Alexandre D'Astous, Ainsleigh Hill, Charlotte, Gaspard Cereza, Julien C
 import abc
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
+import glob
 import imageio
 import logging
 import nibabel as nib
@@ -477,6 +478,21 @@ class RunComponent(Component):
             self.panel.terminal_component.log_to_terminal(output_log)
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
+
+            if self.st_function == "st_dicom_to_nifti":
+                # If its dicom_to_nifti, output all .nii found in the subject folder to the overlay
+                try:
+                    path_output, subject = self.fetch_paths_dicom_to_nifti()
+                    path_sub = os.path.join(path_output, 'sub-' + subject)
+                    list_files = sorted(glob.glob(os.path.join(path_sub, '*', '*.nii*')))
+                    for file in list_files:
+                        self.output_paths.append(file)
+
+                except Exception:
+                    self.panel.terminal_component.log_to_terminal(
+                        "Could not fetch subject and/or path to load to overlay"
+                    )
+
             self.send_output_to_overlay()
 
         except Exception as err:
@@ -580,6 +596,20 @@ class RunComponent(Component):
         msg += "\n"
         return command, msg
 
+    def fetch_paths_dicom_to_nifti(self):
+        if self.st_function == "st_dicom_to_nifti":
+
+            for component in self.list_components:
+
+                if 'subject' in component.input_text_boxes.keys():
+                    box_with_button_sub = component.input_text_boxes['subject'][0]
+                    subject = box_with_button_sub.textctrl_list[0].GetValue()
+
+                if 'output' in component.input_text_boxes.keys():
+                    box_with_button_out = component.input_text_boxes['output'][0]
+                    path_output = box_with_button_out.textctrl_list[0].GetValue()
+
+            return path_output, subject
 
 class TerminalComponent(Component):
     def __init__(self, panel, list_components=[]):
