@@ -21,8 +21,8 @@ install: ## Run 'make install' to install the plugin [Use flag CLEAN=true for cl
 		echo "$(ST_DIR) and conda install found, skipping install of conda"; \
         fi
 
-	#bash installer/create_venv.sh
-	#bash installer/install_plugin.sh
+	bash installer/create_venv.sh
+	bash installer/install_plugin.sh
 	bash installer/install_shimming_toolbox.sh
 
 run: ## To open FSLeyes with the plugin, run 'make run'
