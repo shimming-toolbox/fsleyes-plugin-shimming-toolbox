@@ -192,6 +192,13 @@ class Tab(wx.Panel):
         sizer.Add(self.sizer_terminal, 1, wx.EXPAND)
         return sizer
 
+    def create_empty_component(self):
+        component = InputComponent(
+            panel=self,
+            input_text_box_metadata=[]
+        )
+        return component
+
 
 class Component:
     def __init__(self, panel, list_components=[]):
@@ -427,7 +434,6 @@ class RunComponent(Component):
         st_function (str): Name of the ``Shimming Toolbox`` CLI function to be called.
         list_components (list of Component): list of subcomponents to be added.
         output_paths (list of str): file or folder paths containing output from ``st_function``.
-
     """
 
     def __init__(self, panel, st_function, list_components=[], output_paths=[]):
@@ -610,23 +616,21 @@ class B0ShimTab(Tab):
         self.positions = {}
         self.dropdown_metadata = [
             {
-                "name": "Static",
-                "sizer_function": self.create_sizer_static_shim
+                "name": "Dynamic",
+                "sizer_function": self.create_sizer_dynamic_shim
             },
             {
-                "name": "Realtime",
+                "name": "Realtime Dynamic",
                 "sizer_function": self.create_sizer_realtime_shim
             },
-            {
-                "name": "Gradient Realtime XYZ Shim",
-                "sizer_function": self.create_sizer_gradient_xyzshim
-            }
         ]
         self.dropdown_choices = [item["name"] for item in self.dropdown_metadata]
 
-        # Static shim
-        self.n_coils = 0
-        self.component_coils = None
+        # Dyn + rt shim
+        self.n_coils_rt = 0
+        self.n_coils_dyn = 0
+        self.component_coils_dyn = None
+        self.component_coils_rt = None
 
         self.create_choice_box()
 
@@ -653,8 +657,15 @@ class B0ShimTab(Tab):
         # Unshow everything then show the correct item according to the choice box
         self.unshow_choice_box_sizers()
         if selection in self.positions.keys():
-            sizer_item = self.sizer_run.GetItem(self.positions[selection])
-            sizer_item.Show(True)
+            run_component_sizer_item = self.sizer_run.GetItem(self.positions[selection])
+            run_component_sizer_item.Show(True)
+
+            # When doing Show(True), we show everything in the sizer, we need to call the dropdowns that can contain
+            # items to show the appropriate things according to their current choice.
+            if selection == 'Dynamic':
+                self.dropdown_slice_dyn.on_choice(None)
+            elif selection == 'Realtime Dynamic':
+                self.dropdown_slice_rt.on_choice(None)
         else:
             pass
 
@@ -673,19 +684,19 @@ class B0ShimTab(Tab):
         self.sizer_run.Add(self.choice_box)
         self.sizer_run.AddSpacer(10)
 
-    def create_sizer_static_shim(self, metadata=None):
+    def create_sizer_dynamic_shim(self, metadata=None):
         path_output = os.path.join(CURR_DIR, "output_static_shim")
 
         # no_arg is used here since a --coil option must be used for each of the coils (defined add_input_coil_boxes)
         input_text_box_metadata_coil = [
             {
                 "button_label": "Number of Custom Coils",
-                "button_function": "add_input_coil_boxes",
+                "button_function": "add_input_coil_boxes_dyn",
                 "name": "no_arg",
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
             }
         ]
-        self.component_coils = InputComponent(self, input_text_box_metadata_coil)
+        self.component_coils_dyn = InputComponent(self, input_text_box_metadata_coil)
 
         input_text_box_metadata_inputs = [
             {
@@ -745,7 +756,8 @@ class B0ShimTab(Tab):
                 "default_text": "1",
             },
         ]
-        component_slice = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_int = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_seq = InputComponent(self, input_text_box_metadata_slice)
 
         output_metadata = [
             {
@@ -852,11 +864,12 @@ class B0ShimTab(Tab):
             },
         ]
 
-        dropdown_slice = DropdownComponent(
+        self.dropdown_slice_dyn = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
-            info_text="Defines the slice ordering."
+            info_text="Defines the slice ordering.",
+            list_components=[component_slice_int, component_slice_seq, self.create_empty_component()]
         )
 
         dropdown_coil_format_metadata = [
@@ -942,10 +955,10 @@ class B0ShimTab(Tab):
 
         run_component = RunComponent(
             panel=self,
-            list_components=[self.component_coils, component_inputs, dropdown_opt, component_slice, dropdown_slice,
+            list_components=[self.component_coils_dyn, component_inputs, dropdown_opt, self.dropdown_slice_dyn,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format, dropdown_coil_format,
                              dropdown_ovf, component_output],
-            st_function="st_b0_shim static",
+            st_function="st_b0_shim dynamic",
             # TODO: output paths
             # fig_shimmed_vs_unshimmed.png
             output_paths=[]
@@ -960,12 +973,12 @@ class B0ShimTab(Tab):
         input_text_box_metadata_coil = [
             {
                 "button_label": "Number of Custom Coils",
-                "button_function": "add_input_coil_boxes",
+                "button_function": "add_input_coil_boxes_rt",
                 "name": "no_arg",
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
             }
         ]
-        self.component_coils = InputComponent(self, input_text_box_metadata_coil)
+        self.component_coils_rt = InputComponent(self, input_text_box_metadata_coil)
 
         input_text_box_metadata_inputs = [
             {
@@ -1039,7 +1052,8 @@ class B0ShimTab(Tab):
                 "default_text": "1",
             },
         ]
-        component_slice = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_int = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_seq = InputComponent(self, input_text_box_metadata_slice)
 
         output_metadata = [
             {
@@ -1146,11 +1160,12 @@ class B0ShimTab(Tab):
             },
         ]
 
-        dropdown_slice = DropdownComponent(
+        self.dropdown_slice_rt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
-            info_text="Defines the slice ordering."
+            info_text="Defines the slice ordering.",
+            list_components=[component_slice_int, component_slice_seq, self.create_empty_component()]
         )
 
         dropdown_coil_format_metadata = [
@@ -1211,74 +1226,12 @@ class B0ShimTab(Tab):
 
         run_component = RunComponent(
             panel=self,
-            list_components=[self.component_coils, component_inputs, dropdown_opt, component_slice, dropdown_slice,
+            list_components=[self.component_coils_rt, component_inputs, dropdown_opt, self.dropdown_slice_rt,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format,
-                             dropdown_coil_format,
-                             dropdown_ovf, component_output],
-            st_function="st_b0_shim static",
+                             dropdown_coil_format, dropdown_ovf, component_output],
+            st_function="st_b0_shim realtime-dynamic",
             # TODO: output paths
             output_paths=[]
-        )
-        sizer = run_component.sizer
-        return sizer
-
-    def create_sizer_gradient_xyzshim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_gradient_rt_xyzshim")
-        input_text_box_metadata = [
-            {
-                "button_label": "Input Fieldmap",
-                "name": "fmap",
-                "button_function": "select_from_overlay",
-                "info_text": "B0 fieldmap. This should be a 4D file (4th dimension being time).",
-                "required": True
-            },
-            {
-                "button_label": "Input Anat",
-                "name": "anat",
-                "button_function": "select_from_overlay",
-                "info_text": "Filename of the anatomical image to apply the correction.",
-                "required": True
-            },
-            {
-                "button_label": "Input Static Mask",
-                "name": "mask-static",
-                "button_function": "select_from_overlay",
-                "info_text": """3D NIfTI file used to define the static spatial region to shim.
-                    The coordinate system should be the same as anat's coordinate system."""
-            },
-            {
-                "button_label": "Input RIRO Mask",
-                "name": "mask-riro",
-                "button_function": "select_from_overlay",
-                "info_text": """3D NIfTI file used to define the time varying (i.e. RIRO,
-                    Respiration-Induced Resonance Offset) spatial region to shim.
-                    The coordinate system should be the same as anat's coordinate system."""
-            },
-            {
-                "button_label": "Input Respiratory Trace",
-                "button_function": "select_file",
-                "name": "resp",
-                "info_text": "Siemens respiratory file containing pressure data.",
-                "required": True
-            },
-            {
-                "button_label": "Output Folder",
-                "button_function": "select_folder",
-                "default_text": path_output,
-                "name": "output",
-                "info_text": "Directory to output gradient text file and figures."
-            }
-        ]
-
-        component = InputComponent(self, input_text_box_metadata)
-        run_component = RunComponent(
-            panel=self,
-            list_components=[component],
-            st_function="st_b0_shim gradient_realtime",
-            output_paths=[
-                os.path.join(path_output, "fig_resampled_riro.nii.gz"),
-                os.path.join(path_output, "fig_resampled_static.nii.gz")
-            ]
         )
         sizer = run_component.sizer
         return sizer
@@ -1312,22 +1265,24 @@ class FieldMapTab(Tab):
                 "label": "prelude",
                 "option_name": "unwrapper",
                 "option_value": "prelude"
+            }
+        ]
+
+        dropdown_mask_threshold = [
+            {
+                "label": "mask",
+                "option_name": "no_arg",
+                "option_value": ""
             },
             {
-                "label": "Nothing",
-                "option_name": "unwrapper",
-                "option_value": "QGU"
-            }
+                "label": "threshold",
+                "option_name": "no_arg",
+                "option_value": ""
+            },
         ]
+
         path_output = os.path.join(CURR_DIR, "output_fieldmap")
 
-        input_text_box_metadata_other = [
-            {
-                "button_label": "Other",
-                "name": "other",
-                "info_text": "TODO"
-            }
-        ]
         input_text_box_metadata_output = [
             {
                 "button_label": "Output File",
@@ -1338,6 +1293,42 @@ class FieldMapTab(Tab):
                 "required": True
             }
         ]
+
+        mask_metadata = [
+            {
+                "button_label": "Input Mask",
+                "button_function": "select_from_overlay",
+                "name": "mask",
+                "info_text": "Input path for a mask. Use either a threshold or a mask."
+            }
+        ]
+
+        self.component_mask = InputComponent(
+            panel=self,
+            input_text_box_metadata=mask_metadata
+        )
+
+        threshold_metadata = [
+            {
+                "button_label": "Threshold",
+                "name": "threshold",
+                "info_text": "Float threshold for masking. Must be between 0 and 1"
+            }
+        ]
+
+        self.component_threshold = InputComponent(
+            panel=self,
+            input_text_box_metadata=threshold_metadata
+        )
+
+        self.dropdown_mask_threshold = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_mask_threshold,
+            name="Mask/Threshold",
+            info_text="Masking methos either with a file input or a threshold",
+            list_components=[self.component_mask, self.component_threshold]
+        )
+
         input_text_box_metadata_input2 = [
             {
                 "button_label": "Input Magnitude",
@@ -1345,17 +1336,6 @@ class FieldMapTab(Tab):
                 "name": "mag",
                 "info_text": "Input path of mag NIfTI file.",
                 "required": True
-            },
-            {
-                "button_label": "Threshold",
-                "name": "threshold",
-                "info_text": "Float threshold for masking. Must be between 0 and 1"
-            },
-            {
-                "button_label": "Input Mask",
-                "button_function": "select_from_overlay",
-                "name": "mask",
-                "info_text": "Input path for a mask. Use either a threshold or a mask."
             }
         ]
         self.terminal_component = TerminalComponent(panel=self)
@@ -1367,18 +1347,9 @@ class FieldMapTab(Tab):
             panel=self,
             input_text_box_metadata=input_text_box_metadata_input2
         )
-        self.component_prelude = InputComponent(
-            panel=self,
-            input_text_box_metadata=[]
-        )
-        self.component_other = InputComponent(
-            panel=self,
-            input_text_box_metadata=input_text_box_metadata_other
-        )
         self.dropdown = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_metadata,
-            list_components=[self.component_prelude, self.component_other],
             name="Unwrapper",
             info_text="Algorithm for unwrapping"
         )
@@ -1388,7 +1359,8 @@ class FieldMapTab(Tab):
         )
         self.run_component = RunComponent(
             panel=self,
-            list_components=[self.component_input, self.component_input2, self.dropdown, self.component_output],
+            list_components=[self.component_input, self.component_input2, self.dropdown_mask_threshold, self.dropdown, 
+                             self.component_output],
             st_function="st_prepare_fieldmap"
         )
         self.sizer_run = self.run_component.sizer
@@ -1715,9 +1687,13 @@ class TextWithButton:
                 function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
                     add_input_phase_boxes(event, panel, ctrl)
                 self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
-            elif button_function == "add_input_coil_boxes":
-                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i]: \
-                    add_input_coil_boxes(event, panel, ctrl)
+            elif button_function == "add_input_coil_boxes_dyn":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i], index=1: \
+                    add_input_coil_boxes(event, panel, ctrl, index)
+                self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
+            elif button_function == "add_input_coil_boxes_rt":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i], index=2: \
+                    add_input_coil_boxes(event, panel, ctrl, index)
                 self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
 
         text_with_button_box.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
@@ -1929,7 +1905,7 @@ def add_input_phase_boxes(event, tab, ctrl):
     tab.Layout()
 
 
-def add_input_coil_boxes(event, tab, ctrl):
+def add_input_coil_boxes(event, tab, ctrl, i=0):
     """On click of ``Number of Custom Coils`` button, add ``n_coils`` ``TextWithButton`` boxes.
 
     For this function, we are assuming the layout of the Component input is as follows:
@@ -1947,6 +1923,7 @@ def add_input_coil_boxes(event, tab, ctrl):
         tab (B0ShimTab): tab class instance for ``B0 Shim``.
         ctrl (wx.TextCtrl): the text box containing the number of phase boxes to add. Must be an
             integer > 0.
+        i (int): Index of the coil instance. Used when the tab has multiple coil instances. 1 <= index <= 2
     """
 
     option_name = "coil"
@@ -1961,21 +1938,31 @@ def add_input_coil_boxes(event, tab, ctrl):
         )
         n_coils = 0
 
+    # Depending on the index, select the appropriate component
+    if i == 1:
+        n_coils_displayed = tab.n_coils_dyn
+        component_coils = tab.component_coils_dyn
+    elif i == 2:
+        n_coils_displayed = tab.n_coils_rt
+        component_coils = tab.component_coils_rt
+    else:
+        raise NotImplementedError("Index of the coil instance not implemented for more indexes")
+
     insert_index = 2
     # If we have to remove coils
-    if n_coils < tab.n_coils:
-        for index in range(tab.n_coils, n_coils, - 1):
-            tab.component_coils.sizer.Hide(index + 1)
-            tab.component_coils.sizer.Remove(index + 1)
-            tab.component_coils.remove_last_input_text_box(option_name)
+    if n_coils < n_coils_displayed:
+        for index in range(n_coils_displayed, n_coils, - 1):
+            component_coils.sizer.Hide(index + 1)
+            component_coils.sizer.Remove(index + 1)
+            component_coils.remove_last_input_text_box(option_name)
 
         # Delete the last spacer if we go back to n_coils == 0
         if n_coils == 0:
             index = 2
-            tab.component_coils.sizer.Hide(index)
-            tab.component_coils.sizer.Remove(index)
+            component_coils.sizer.Hide(index)
+            component_coils.sizer.Remove(index)
 
-    for index in range(tab.n_coils, n_coils):
+    for index in range(n_coils_displayed, n_coils):
         text_with_button = TextWithButton(
             panel=tab,
             button_label=f"Input Coil {index + 1}",
@@ -1988,20 +1975,24 @@ def add_input_coil_boxes(event, tab, ctrl):
         )
         # Add a spacer at the end if its the last one and if there were none previously
         # i.e. if it was previously n_coils == 0
-        if index + 1 == n_coils and tab.n_coils == 0:
-            tab.component_coils.insert_input_text_box(
+        if index + 1 == n_coils and n_coils_displayed == 0:
+            component_coils.insert_input_text_box(
                 text_with_button,
                 option_name,
                 index=insert_index + index,
                 last=True)
         else:
-            tab.component_coils.insert_input_text_box(
+            component_coils.insert_input_text_box(
                 text_with_button,
                 option_name,
                 index=insert_index + index
             )
 
-    tab.n_coils = n_coils
+    if i == 1:
+        tab.n_coils_dyn = n_coils
+    elif i == 2:
+        tab.n_coils_rt = n_coils
+
     tab.Layout()
 
 
