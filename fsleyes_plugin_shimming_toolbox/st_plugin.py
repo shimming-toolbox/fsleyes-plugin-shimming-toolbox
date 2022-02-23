@@ -478,7 +478,16 @@ class RunComponent(Component):
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
             self.send_output_to_overlay()
         except Exception as err:
-            self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
+            
+            if len(err.args) == 1:
+                # Pretty output
+                a_string = ""
+                for i_err in range(len(err.args[0])):
+                    a_string += str(err.args[0][i_err])
+                self.panel.terminal_component.log_to_terminal(a_string, level="ERROR")
+            
+            else:
+                self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
 
         self.output_paths.clear()
         self.output_paths = self.output_paths_original.copy()
@@ -1323,7 +1332,7 @@ class B1ShimTab(Tab):
         input_text_box_metadata = [
             {
                 "button_label": "Input B1+ map",
-                "name": "b1map",
+                "name": "b1",
                 "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
@@ -1373,7 +1382,7 @@ class B1ShimTab(Tab):
         input_text_box_metadata = [
             {
                 "button_label": "Input B1+ map",
-                "name": "b1map",
+                "name": "b1",
                 "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
@@ -1430,7 +1439,7 @@ class B1ShimTab(Tab):
         input_text_box_metadata = [
             {
                 "button_label": "Input B1+ map",
-                "name": "b1map",
+                "name": "b1",
                 "button_function": "select_from_overlay",
                 "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
                 "required": True
@@ -1480,7 +1489,7 @@ class B1ShimTab(Tab):
         input_text_box_metadata = [
             {
                 "button_label": "Input B1+ maps",
-                "name": "b1map",
+                "name": "b1",
                 "button_function": "select_from_overlay",
                 "info_text": "NIfTI file containing the individual B1+ maps, as created by dcm2niix.",
                 "required": True
@@ -2003,6 +2012,7 @@ def create_info_icon(panel, info_text=""):
 def on_info_icon_mouse_over(event):
     image = event.GetEventObject()
     tooltip = wx.ToolTip(image.info_text)
+    # TODO: Reduce this, It does not seem to be affected since it is ms
     tooltip.SetDelay(10)
     image.SetToolTip(tooltip)
 
