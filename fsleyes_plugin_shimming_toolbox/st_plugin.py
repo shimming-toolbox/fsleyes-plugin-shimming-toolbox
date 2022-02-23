@@ -9,34 +9,33 @@ This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into 
 - st_mask
 - st_prepare_fieldmap
 - st_b0shim
+- st_b1shim
 
 ---------------------------------------------------------------------------------------
 Copyright (c) 2021 Polytechnique Montreal <www.neuro.polymtl.ca>
 Authors: Alexandre D'Astous, Ainsleigh Hill, Charlotte, Gaspard Cereza, Julien Cohen-Adad
 """
 
-import wx
-
+import abc
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
-
-import numpy as np
-import webbrowser
-import nibabel as nib
-import os
-import abc
-import tempfile
-import logging
 import imageio
-from pathlib import Path
+import logging
+import nibabel as nib
+import numpy as np
+import os
+import tempfile
+import webbrowser
+import wx
 
+from pathlib import Path
 from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 
 logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
-ST_DIR = f"{HOME_DIR}/shimming-toolbox"
+ST_DIR = f"{HOME_DIR}/shimming_toolbox"
 
 DIR = os.path.dirname(__file__)
 
@@ -156,12 +155,14 @@ class TabPanel(wx.ScrolledWindow):
         tab2 = FieldMapTab(nb)
         tab3 = MaskTab(nb)
         tab4 = B0ShimTab(nb)
+        tab5 = B1ShimTab(nb)
 
         # Add the windows to tabs and name them.
         nb.AddPage(tab1, tab1.title)
         nb.AddPage(tab2, tab2.title)
         nb.AddPage(tab3, tab3.title)
         nb.AddPage(tab4, tab4.title)
+        nb.AddPage(tab5, tab5.title)
 
         # Set to the Shim tab
         nb.SetSelection(3)
@@ -170,7 +171,7 @@ class TabPanel(wx.ScrolledWindow):
         sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(sizer)
         self.SetScrollbars(0, 4, 1, 1)
-        
+
 
 class Tab(wx.Panel):
     def __init__(self, parent, title, description):
@@ -560,7 +561,6 @@ class RunComponent(Component):
         for arg in command_list_arguments:
             command += f" {arg}"
 
-        # print(command_list_options)
         # Handles options
         for name, args in command_list_options:
             command += f" --{name}"
@@ -965,7 +965,7 @@ class B0ShimTab(Tab):
         )
         sizer = run_component.sizer
         return sizer
-    
+
     def create_sizer_realtime_shim(self, metadata=None):
         path_output = os.path.join(CURR_DIR, "output_realtime_shim")
 
@@ -1244,6 +1244,279 @@ class B0ShimTab(Tab):
         return sizer
 
 
+class B1ShimTab(Tab):
+    def __init__(self, parent, title=r"B1+ Shim"):
+
+        description = "Perform B1+ shimming.\n\n" \
+                      "Select the shimming algorithm from the dropdown list."
+        super().__init__(parent, title, description)
+
+        self.sizer_run = self.create_sizer_run()
+        self.positions = {}
+        self.dropdown_metadata = [
+            {
+                "name": "CV reduction",
+                "sizer_function": self.create_sizer_cv
+            },
+            {
+                "name": "Target",
+                "sizer_function": self.create_sizer_target
+            },
+            {
+                "name": "SAR efficiency",
+                "sizer_function": self.create_sizer_sar_eff
+            },
+            {
+                "name": "Phase-only",
+                "sizer_function": self.create_sizer_phase_only
+            }
+        ]
+        self.dropdown_choices = [item["name"] for item in self.dropdown_metadata]
+
+        self.create_choice_box()
+
+        self.terminal_component = TerminalComponent(self)
+        self.sizer_terminal = self.terminal_component.sizer
+
+        self.create_dropdown_sizers()
+        self.parent_sizer = self.create_sizer()
+        self.SetSizer(self.parent_sizer)
+
+        # Run on choice to select the default choice from the choice box widget
+        self.on_choice(None)
+
+    def create_dropdown_sizers(self):
+        for dropdown_dict in self.dropdown_metadata:
+            sizer = dropdown_dict["sizer_function"]()
+            self.sizer_run.Add(sizer, 0, wx.EXPAND)
+            self.positions[dropdown_dict["name"]] = self.sizer_run.GetItemCount() - 1
+
+    def on_choice(self, event):
+        # Get the selection from the choice box widget
+        selection = self.choice_box.GetString(self.choice_box.GetSelection())
+
+        # Unshow everything then show the correct item according to the choice box
+        self.unshow_choice_box_sizers()
+        if selection in self.positions.keys():
+            sizer_item = self.sizer_run.GetItem(self.positions[selection])
+            sizer_item.Show(True)
+        else:
+            pass
+
+        # Update the window
+        self.Layout()
+
+    def unshow_choice_box_sizers(self):
+        """Set the Show variable to false for all sizers of the choice box widget"""
+        for position in self.positions.values():
+            sizer_item = self.sizer_run.GetItem(position)
+            sizer_item.Show(False)
+
+    def create_choice_box(self):
+        self.choice_box = wx.Choice(self, choices=self.dropdown_choices)
+        self.choice_box.Bind(wx.EVT_CHOICE, self.on_choice)
+        self.sizer_run.Add(self.choice_box)
+        self.sizer_run.AddSpacer(10)
+
+    def create_sizer_cv(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "b1_shim_output")
+        input_text_box_metadata = [
+            {
+                "button_label": "Input B1+ map",
+                "name": "b1map",
+                "button_function": "select_from_overlay",
+                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "required": True
+            },
+            {
+                "button_label": "Input Mask",
+                "name": "mask",
+                "button_function": "select_from_overlay",
+                "info_text": "3D NIfTI file used to define the shimming region of interest"
+            },
+            {
+                "button_label": "Input VOP file",
+                "name": "vop",
+                "button_function": "select_file",
+                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
+            },
+            {
+                "button_label": "SAR factor",
+                "name": "sar_factor",
+                "default_text": "1.5",
+                "info_text": """Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max 
+                local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more shimming 
+                liberty but are more likely to result in SAR excess on the scanner.
+                """
+            },
+            {
+                "button_label": "Output Folder",
+                "button_function": "select_folder",
+                "default_text": path_output,
+                "name": "output",
+                "info_text": "Directory to output shim weights, B1+ maps and figures."
+            }
+        ]
+
+        component = InputComponent(self, input_text_box_metadata)
+        run_component = RunComponent(
+            panel=self,
+            list_components=[component],
+            st_function="st_b1shim --algo 1",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
+        )
+        sizer = run_component.sizer
+        return sizer
+
+    def create_sizer_target(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "b1_shim_output")
+        input_text_box_metadata = [
+            {
+                "button_label": "Input B1+ map",
+                "name": "b1map",
+                "button_function": "select_from_overlay",
+                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "required": True
+            },
+            {
+                "button_label": "Input Mask",
+                "name": "mask",
+                "button_function": "select_from_overlay",
+                "info_text": "3D NIfTI file used to define the shimming region of interest"
+            },
+            {
+                "button_label": "Target value (nT/V)",
+                "name": "target",
+                "default_text": "20",
+                "info_text": "B1+ value (in nT/V targeted by the optimization)",
+                "required": True
+            },
+            {
+                "button_label": "Input VOP file",
+                "name": "vop",
+                "button_function": "select_file",
+                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
+            },
+            {
+                "button_label": "SAR factor",
+                "name": "sar_factor",
+                "default_text": "1.5",
+                "info_text": """Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max 
+                       local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more 
+                       shimming liberty but are more likely to result in SAR excess on the scanner.
+                       """
+            },
+            {
+                "button_label": "Output Folder",
+                "button_function": "select_folder",
+                "default_text": path_output,
+                "name": "output",
+                "info_text": "Directory to output shim weights, B1+ maps and figures."
+            }
+        ]
+
+        component = InputComponent(self, input_text_box_metadata)
+        run_component = RunComponent(
+            panel=self,
+            list_components=[component],
+            st_function="st_b1shim --algo 2",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
+        )
+        sizer = run_component.sizer
+        return sizer
+
+    def create_sizer_sar_eff(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "b1_shim_output")
+        input_text_box_metadata = [
+            {
+                "button_label": "Input B1+ map",
+                "name": "b1map",
+                "button_function": "select_from_overlay",
+                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "required": True
+            },
+            {
+                "button_label": "Input Mask",
+                "name": "mask",
+                "button_function": "select_from_overlay",
+                "info_text": "3D NIfTI file used to define the shimming region of interest"
+            },
+            {
+                "button_label": "Input VOP file",
+                "name": "vop",
+                "button_function": "select_file",
+                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)",
+                "required": True
+            },
+            {
+                "button_label": "SAR factor",
+                "name": "sar_factor",
+                "default_text": "1.5",
+                "info_text": "Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max" 
+                "local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more"
+                "shimming liberty but are more likely to result in SAR excess on the scanner."
+            },
+            {
+                "button_label": "Output Folder",
+                "button_function": "select_folder",
+                "default_text": path_output,
+                "name": "output",
+                "info_text": "Directory to output shim weights, B1+ maps and figures."
+            }
+        ]
+
+        component = InputComponent(self, input_text_box_metadata)
+        run_component = RunComponent(
+            panel=self,
+            list_components=[component],
+            st_function="st_b1shim --algo 3",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
+        )
+        sizer = run_component.sizer
+        return sizer
+
+    def create_sizer_phase_only(self, metadata=None):
+        path_output = os.path.join(CURR_DIR, "b1_shim_output")
+        input_text_box_metadata = [
+            {
+                "button_label": "Input B1+ maps",
+                "name": "b1map",
+                "button_function": "select_from_overlay",
+                "info_text": "NIfTI file containing the individual B1+ maps, as created by dcm2niix.",
+                "required": True
+            },
+            {
+                "button_label": "Input Mask",
+                "name": "mask",
+                "button_function": "select_from_overlay",
+                "info_text": "3D NIfTI file used to define the shimming region of interest"
+            },
+            {
+                "button_label": "Output Folder",
+                "button_function": "select_folder",
+                "default_text": path_output,
+                "name": "output",
+                "info_text": "Directory to output shim weights, B1+ maps and figures."
+            }
+        ]
+        component = InputComponent(self, input_text_box_metadata)
+        run_component = RunComponent(
+            panel=self,
+            list_components=[component],
+            st_function="st_b1shim --algo 4",
+            output_paths=[os.path.join(path_output, 'TB1map_shimmed.nii.gz')]
+        )
+        sizer = run_component.sizer
+        return sizer
+
+    def create_sizer_run(self):
+        """Create the centre sizer containing tab-specific functionality."""
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.SetMinSize(400, 300)
+        sizer.AddSpacer(10)
+        return sizer
+
+
 class FieldMapTab(Tab):
     def __init__(self, parent, title="Field Map"):
         description = "Create a B0 fieldmap.\n\n" \
@@ -1359,7 +1632,7 @@ class FieldMapTab(Tab):
         )
         self.run_component = RunComponent(
             panel=self,
-            list_components=[self.component_input, self.component_input2, self.dropdown_mask_threshold, self.dropdown, 
+            list_components=[self.component_input, self.component_input2, self.dropdown_mask_threshold, self.dropdown,
                              self.component_output],
             st_function="st_prepare_fieldmap"
         )
