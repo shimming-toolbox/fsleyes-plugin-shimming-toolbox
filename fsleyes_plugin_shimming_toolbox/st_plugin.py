@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
-ST_DIR = f"{HOME_DIR}/shimming_toolbox"
+ST_DIR = f"{HOME_DIR}/shimming-toolbox"
 
 DIR = os.path.dirname(__file__)
 
@@ -473,12 +473,13 @@ class RunComponent(Component):
             command, msg = self.get_run_args(self.st_function)
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
             self.create_output_folder()
-            run_subprocess(command)
+            output_log = run_subprocess(command)
+            self.panel.terminal_component.log_to_terminal(output_log)
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
             self.send_output_to_overlay()
+
         except Exception as err:
-            
             if len(err.args) == 1:
                 # Pretty output
                 a_string = ""
@@ -576,6 +577,7 @@ class RunComponent(Component):
             for arg in args:
                 command += f" {arg}"
         msg += command
+        msg += "\n"
         return command, msg
 
 

@@ -18,14 +18,18 @@ def run_subprocess(cmd):
     """
     logging.info(f'{cmd}')
     try:
-        subprocess.run(
+        # stdout captures print, stderr captures logging and errors
+        # Solution: Pipe stderr to stdout
+        result = subprocess.run(
             cmd.split(' '),
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
             text=True,
             check=True,
             env=dict(PATH=PATH_ST_VENV)
         )
+        return result.stdout
     except subprocess.CalledProcessError as err:
-        msg = "Return code: ", err.returncode, "\nOutput: ", err.stderr
+        # Since std err was piped to stdout, we output stdout
+        msg = "Return code: ", err.returncode, "\nOutput: ", err.stdout
         raise Exception(msg)
