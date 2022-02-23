@@ -11,7 +11,7 @@ cd $ST_DIR
 
 print info "Downloading Shimming-Toolbox"
 
-ST_VERSION=f9e272841af5b2798214170b314c342e1174fb79
+ST_VERSION=12d8dba96c7b80d61c7250ca4e1d50f49b80e240
 
 curl -L "https://github.com/shimming-toolbox/shimming-toolbox/archive/${ST_VERSION}.zip" > "shimming-toolbox-${ST_VERSION}.zip"
 
