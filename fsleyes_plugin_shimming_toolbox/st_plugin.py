@@ -958,7 +958,7 @@ class B0ShimTab(Tab):
             list_components=[self.component_coils_dyn, component_inputs, dropdown_opt, self.dropdown_slice_dyn,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format, dropdown_coil_format,
                              dropdown_ovf, component_output],
-            st_function="st_b0_shim dynamic",
+            st_function="st_b0shim dynamic",
             # TODO: output paths
             # fig_shimmed_vs_unshimmed.png
             output_paths=[]
@@ -1229,7 +1229,7 @@ class B0ShimTab(Tab):
             list_components=[self.component_coils_rt, component_inputs, dropdown_opt, self.dropdown_slice_rt,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format,
                              dropdown_coil_format, dropdown_ovf, component_output],
-            st_function="st_b0_shim realtime-dynamic",
+            st_function="st_b0shim realtime-dynamic",
             # TODO: output paths
             output_paths=[]
         )
