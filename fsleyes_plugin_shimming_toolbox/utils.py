@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import logging
+import os
 import subprocess
 
 from pathlib import Path
@@ -18,6 +22,11 @@ def run_subprocess(cmd):
     """
     logging.info(f'{cmd}')
     try:
+        env = os.environ.copy()
+        # It seems to default to the Python executalble instead of the Shebang, removing it fixes it
+        env["PYTHONEXECUTABLE"] = ""
+        env["PATH"] = PATH_ST_VENV + ":" + env["PATH"]
+        
         # stdout captures print, stderr captures logging and errors
         # Solution: Pipe stderr to stdout
         result = subprocess.run(
@@ -26,7 +35,7 @@ def run_subprocess(cmd):
             stderr=subprocess.STDOUT,
             text=True,
             check=True,
-            env=dict(PATH=PATH_ST_VENV)
+            env=env
         )
         return result.stdout
     except subprocess.CalledProcessError as err:
