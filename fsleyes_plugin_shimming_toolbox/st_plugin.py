@@ -418,6 +418,8 @@ class DropdownComponent(Component):
         for index in range(len(self.dropdown_metadata)):
             if self.dropdown_metadata[index]["label"] == label:
                 return index
+            else:
+                return 0
 
     def create_sizer(self):
         """Create the a sizer containing tab-specific functionality."""
@@ -2240,7 +2242,10 @@ def add_input_coil_boxes(event, tab, ctrl, i=0):
 
     option_name = "coil"
     try:
-        n_coils = int(ctrl.GetValue())
+        if ctrl.GetValue() == "":
+            n_coils = 0
+        else:
+            n_coils = int(ctrl.GetValue())
         if n_coils < 0:
             raise Exception()
     except Exception:
