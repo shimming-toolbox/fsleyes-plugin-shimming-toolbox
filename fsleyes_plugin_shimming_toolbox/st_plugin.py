@@ -1001,8 +1001,8 @@ class B0ShimTab(Tab):
                              dropdown_ovf, component_output],
             st_function="st_b0shim dynamic",
             # TODO: output paths
-            # fig_shimmed_vs_unshimmed.png
-            output_paths=[]
+            output_paths=["fieldmap_calculated_shim_masked.nii.gz",
+                          "fieldmap_calculated_shim.nii.gz"]
         )
         sizer = run_component.sizer
         return sizer
