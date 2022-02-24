@@ -2177,6 +2177,12 @@ def add_input_phase_boxes(event, tab, ctrl):
         n_echoes = int(ctrl.GetValue())
         if n_echoes < 1:
             raise Exception()
+        elif n_echoes > 6:
+            n_echoes = 6
+            tab.terminal_component.log_to_terminal(
+                "Number of echoes limited to 6",
+                level="WARNING"
+            )
     except Exception:
         tab.terminal_component.log_to_terminal(
             "Number of Echoes must be an integer > 0",
@@ -2248,9 +2254,16 @@ def add_input_coil_boxes(event, tab, ctrl, i=0):
             n_coils = int(ctrl.GetValue())
         if n_coils < 0:
             raise Exception()
+        elif n_coils > 5:
+            n_coils = 5
+            tab.terminal_component.log_to_terminal(
+                "Number of coils limited to 5",
+                level="WARNING"
+            )
+
     except Exception:
         tab.terminal_component.log_to_terminal(
-            "Number of Echoes must be an integer >= 0",
+            "Number of coils must be an integer >= 0",
             level="ERROR"
         )
         n_coils = 0
