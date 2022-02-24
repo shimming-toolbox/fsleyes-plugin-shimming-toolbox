@@ -158,15 +158,12 @@ class TabPanel(wx.ScrolledWindow):
         tab4 = B0ShimTab(nb)
         tab5 = B1ShimTab(nb)
 
-        # Add the windows to tabs and name them.
+        # Add the windows to tabs and name them. Use 'select' to choose the default tab displayed at startup
         nb.AddPage(tab1, tab1.title)
         nb.AddPage(tab2, tab2.title)
         nb.AddPage(tab3, tab3.title)
-        nb.AddPage(tab4, tab4.title)
+        nb.AddPage(tab4, tab4.title, select=True)
         nb.AddPage(tab5, tab5.title)
-
-        # Set to the Shim tab
-        nb.SetSelection(3)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(nb, 1, wx.EXPAND)
