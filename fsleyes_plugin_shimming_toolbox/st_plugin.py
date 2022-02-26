@@ -725,7 +725,7 @@ class B0ShimTab(Tab):
         self.sizer_run.AddSpacer(10)
 
     def create_sizer_dynamic_shim(self, metadata=None):
-        path_output = os.path.join(CURR_DIR, "output_static_shim")
+        path_output = os.path.join(CURR_DIR, "output_dynamic_shim")
 
         # no_arg is used here since a --coil option must be used for each of the coils (defined add_input_coil_boxes)
         input_text_box_metadata_coil = [
