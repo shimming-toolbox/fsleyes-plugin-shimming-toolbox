@@ -434,7 +434,8 @@ class RunComponent(Component):
         panel (wx.Panel): Panel, this is usually a Tab instance
         st_function (str): Name of the ``Shimming Toolbox`` CLI function to be called.
         list_components (list of Component): list of subcomponents to be added.
-        output_paths (list of str): relative path of files containing output from ``st_function``. Path is relative to 
+        output_paths (list of str): file or folder paths containing output from ``st_function``.
+        output_paths (list of str): relative path of files containing output from ``st_function``. Path is relative to
                                     the output option's folder.
     """
 
@@ -483,11 +484,11 @@ class RunComponent(Component):
                 folder = get_folder(self.output)
             else:
                 folder = self.output
-                
+
             # Append the directory to the relative path of path output
             for path in self.output_paths:
                 self.output_paths = os.path.join(forlder, path)
-            
+
             # Append the file if it was a file
             if os.path.isfile(self.output):
                 self.output_paths.append(self.output)
@@ -507,7 +508,6 @@ class RunComponent(Component):
                     )
 
             self.send_output_to_overlay()
-
         except Exception as err:
             if len(err.args) == 1:
                 # Pretty output
@@ -515,7 +515,7 @@ class RunComponent(Component):
                 for i_err in range(len(err.args[0])):
                     a_string += str(err.args[0][i_err])
                 self.panel.terminal_component.log_to_terminal(a_string, level="ERROR")
-            
+
             else:
                 self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
 
@@ -579,7 +579,7 @@ class RunComponent(Component):
                                 else:
                                     if name == "output":
                                         self.output = arg
-                                        
+
                                     option_values.append(arg)
 
                         # If its an argument don't include it as an option, if the option list is empty don't either
