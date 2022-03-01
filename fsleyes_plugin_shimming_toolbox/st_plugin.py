@@ -487,7 +487,7 @@ class RunComponent(Component):
 
             # Append the directory to the relative path of path output
             for path in self.output_paths:
-                self.output_paths = os.path.join(forlder, path)
+                self.output_paths = os.path.join(folder, path)
 
             # Append the file if it was a file
             if os.path.isfile(self.output):
