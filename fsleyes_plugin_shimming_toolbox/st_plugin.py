@@ -1187,14 +1187,14 @@ class B0ShimTab(Tab):
 
         dropdown_slice_metadata = [
             {
-                "label": "Interleaved",
-                "option_name": "slices",
-                "option_value": "interleaved"
-            },
-            {
                 "label": "Sequential",
                 "option_name": "slices",
                 "option_value": "sequential"
+            },
+            {
+                "label": "Interleaved",
+                "option_name": "slices",
+                "option_value": "interleaved"
             },
             {
                 "label": "Volume",
