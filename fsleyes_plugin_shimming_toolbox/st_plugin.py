@@ -410,7 +410,6 @@ class DropdownComponent(Component):
         # Add the dropdown to the list of options
         self.input_text_boxes[self.dropdown_metadata[index]["option_name"]] = \
             [self.dropdown_metadata[index]["option_value"]]
-
         # Update the window
         self.panel.Layout()
 
@@ -418,8 +417,9 @@ class DropdownComponent(Component):
         for index in range(len(self.dropdown_metadata)):
             if self.dropdown_metadata[index]["label"] == label:
                 return index
-            else:
-                return 0
+
+        # Return index 0 if it is not found
+        return 0
 
     def create_sizer(self):
         """Create the a sizer containing tab-specific functionality."""
