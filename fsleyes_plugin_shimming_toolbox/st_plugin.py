@@ -506,7 +506,6 @@ class RunComponent(Component):
                     self.panel.terminal_component.log_to_terminal(
                         "Could not fetch subject and/or path to load to overlay"
                     )
-            print(self.output_paths)
             self.send_output_to_overlay()
         except Exception as err:
             if len(err.args) == 1:
