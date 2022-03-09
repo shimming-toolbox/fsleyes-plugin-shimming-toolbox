@@ -479,15 +479,15 @@ class RunComponent(Component):
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
 
-            # Get the directory of the output is it is a file or already a directory
+            # Get the directory of the output if it is a file or already a directory
             if os.path.isfile(self.output):
                 folder = get_folder(self.output)
             else:
                 folder = self.output
 
-            # Append the directory to the relative path of path output
-            for path in self.output_paths:
-                self.output_paths = os.path.join(folder, path)
+            # Add the directory to the relative path of path output
+            for i_file in range(len(self.output_paths)):
+                self.output_paths[i_file] = os.path.join(folder, self.output_paths[i_file])
 
             # Append the file if it was a file
             if os.path.isfile(self.output):
@@ -506,7 +506,7 @@ class RunComponent(Component):
                     self.panel.terminal_component.log_to_terminal(
                         "Could not fetch subject and/or path to load to overlay"
                     )
-
+            print(self.output_paths)
             self.send_output_to_overlay()
         except Exception as err:
             if len(err.args) == 1:
