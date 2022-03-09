@@ -1560,7 +1560,7 @@ class B1ShimTab(Tab):
 
 
 class FieldMapTab(Tab):
-    def __init__(self, parent, title="Field Map"):
+    def __init__(self, parent, title="Fieldmap"):
         description = "Create a B0 fieldmap.\n\n" \
                       "Enter the Number of Echoes then press the `Number of Echoes` button.\n\n" \
                       "Select the unwrapper from the dropdown list."
