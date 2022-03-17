@@ -31,6 +31,12 @@ import wx
 
 from pathlib import Path
 from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
+from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli
+from shimmingtoolbox.cli.b1shim import b1shim_cli
+from shimmingtoolbox.cli.dicom_to_nifti import dicom_to_nifti_cli
+from shimmingtoolbox.cli.mask import mask_cli
+from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
+
 
 logger = logging.getLogger(__name__)
 
@@ -612,6 +618,7 @@ class RunComponent(Component):
                     path_output = box_with_button_out.textctrl_list[0].GetValue()
 
             return path_output, subject
+
 
 class TerminalComponent(Component):
     def __init__(self, panel, list_components=[]):
@@ -1367,36 +1374,33 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": "3D NIfTI file used to define the shimming region of interest"
+                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
+                "info_text": f"{b1shim_cli.params[4].help}"
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": """Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max 
-                local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more shimming 
-                liberty but are more likely to result in SAR excess on the scanner.
-                """
+                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": "Directory to output shim weights, B1+ maps and figures."
+                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
@@ -1417,43 +1421,40 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": "3D NIfTI file used to define the shimming region of interest"
+                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Target value (nT/V)",
                 "name": "target",
                 "default_text": "20",
-                "info_text": "B1+ value (in nT/V targeted by the optimization)",
+                "info_text": f"{b1shim_cli.params[3].help}",
                 "required": True
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)"
+                "info_text": f"{b1shim_cli.params[4].help}"
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": """Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max 
-                       local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more 
-                       shimming liberty but are more likely to result in SAR excess on the scanner.
-                       """
+                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": "Directory to output shim weights, B1+ maps and figures."
+                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
@@ -1474,36 +1475,34 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": "B1+ map. 4D NIfTI file as created by dcm2niix.",
+                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": "3D NIfTI file used to define the shimming region of interest"
+                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": "Siemens SarDataUser.mat file (located in C:/Medcom/MriProduct/Physconfig)",
+                "info_text": f"{b1shim_cli.params[4].help}",
                 "required": True
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": "Factor (=> 1) to which the shimmed max local SAR can exceed the phase-only shimming max" 
-                "local SAR. Values between 1 and 1.5 should work with Siemens scanners. High factors allow more"
-                "shimming liberty but are more likely to result in SAR excess on the scanner."
+                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": "Directory to output shim weights, B1+ maps and figures."
+                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
@@ -1524,21 +1523,21 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ maps",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": "NIfTI file containing the individual B1+ maps, as created by dcm2niix.",
+                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": "3D NIfTI file used to define the shimming region of interest"
+                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": "Directory to output shim weights, B1+ maps and figures."
+                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
         component = InputComponent(self, input_text_box_metadata)

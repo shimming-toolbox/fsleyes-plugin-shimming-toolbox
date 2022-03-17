@@ -27,3 +27,11 @@ cp "${ST_DIR}/shimming-toolbox-${ST_VERSION}/config/coil_config.json" "${ST_DIR}
 
 print info "To launch the plugin, load the environment variables then run:" 
 print list "shimming-toolbox"
+
+# Install shimming-toolbox in pst_venv to be able to fetch the CLI docstrings for the plugin contextual help
+source $ST_DIR/python/etc/profile.d/conda.sh
+conda activate $ST_DIR/python/envs/pst_venv
+print info "HERE!!!!!"
+echo $CONDA_DEFAULT_ENV
+print info "HERE!!!!!"
+pip install -e .
