@@ -34,7 +34,7 @@ from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
 from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli
 from shimmingtoolbox.cli.b1shim import b1shim_cli
 from shimmingtoolbox.cli.dicom_to_nifti import dicom_to_nifti_cli
-from shimmingtoolbox.cli.mask import box, rect, sct, threshold
+from shimmingtoolbox.cli.mask import box, rect, threshold
 from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
 
 
