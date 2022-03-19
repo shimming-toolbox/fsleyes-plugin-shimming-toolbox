@@ -1882,7 +1882,7 @@ class MaskTab(Tab):
 
 class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
-        description = "Process dicoms into NIfTI following the BIDS data structure"
+        description = "Convert DICOM files into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
         path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
