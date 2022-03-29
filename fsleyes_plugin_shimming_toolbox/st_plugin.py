@@ -3,7 +3,7 @@
 
 """Shimming Toolbox FSLeyes Plugin
 
-This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into FSLeyes:
+This is an FSLeyes plugin that integrates the following ``shimmingtoolbox`` tools into FSLeyes' GUI:
 
 - st_dicom_to_nifti
 - st_mask
@@ -13,12 +13,13 @@ This is an FSLeyes plugin script that integrates ``shimmingtoolbox`` tools into 
 
 ---------------------------------------------------------------------------------------
 Copyright (c) 2021 Polytechnique Montreal <www.neuro.polymtl.ca>
-Authors: Alexandre D'Astous, Ainsleigh Hill, Charlotte, Gaspard Cereza, Julien Cohen-Adad
+Authors: Alexandre D'Astous, Ainsleigh Hill, Gaspard Cereza, Julien Cohen-Adad
 """
 
 import abc
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.actions.loadoverlay as loadoverlay
+import fsleyes.views.canvaspanel as canvaspanel
 import glob
 import imageio
 import logging
@@ -43,31 +44,39 @@ DIR = os.path.dirname(__file__)
 VERSION = "0.1.1"
 
 
+# We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
+# Class hierarchy: wx.Panel > fslpanel.FSLeyesPanel > ctrlpanel.ControlPanel
 class STControlPanel(ctrlpanel.ControlPanel):
     """Class for Shimming Toolbox Control Panel"""
 
-    def __init__(self, ortho, *args, **kwargs):
+    @staticmethod
+    def supportedViews():
+        """The ``MelodicClassificationPanel`` is restricted for use with
+        :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
+        :class:`.Scene3DPanel` viewws.
+        """
+
+        return [canvaspanel.CanvasPanel]
+
+    @staticmethod
+    def defaultLayout():
+        """This method makes the control panel appear on the top of the FSLeyes window."""
+        return {
+            "location": wx.TOP,
+            "title": "Shimming Toolbox"
+        }
+
+    def __init__(self, parent, overlayList, displayCtx, viewPanel):
         """Initialize the control panel.
 
-        Generates the widgets and adds them to the panel. Also sets the initial position of the
-        panel to the left.
+        Generates the widgets and adds them to the panel.
 
-        Args:
-            ortho: This is used to access the ortho ops in order to turn off the X and Y canvas as
-                well as the cursor
         """
-        ctrlpanel.ControlPanel.__init__(self, ortho, *args, **kwargs)
-
-        my_panel = TabPanel(self)
-        sizer_tabs = wx.BoxSizer(wx.VERTICAL)
-        # Actually sets the maximum size shown at once, also the defaullt when the window is floating
-        sizer_tabs.SetMinSize(400, 400)
-        sizer_tabs.Add(my_panel, 1, wx.EXPAND)
-
-        # Set the sizer of the control panel
-        sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(sizer_tabs, wx.EXPAND)
-        self.SetSizer(sizer)
+        super().__init__(parent, overlayList, displayCtx, viewPanel)
+        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.__sizer.Add(TabPanel(self), flag=wx.EXPAND, proportion=1)
+        self.SetSizer(self.__sizer)
+        self.__sizer.SetMinSize((600, 400))
 
         # Initialize the variables that are used to track the active image
         self.png_image_name = []
@@ -77,8 +86,6 @@ class STControlPanel(ctrlpanel.ControlPanel):
         # Create a temporary directory that will hold the NIfTI files
         self.st_temp_dir = tempfile.TemporaryDirectory()
 
-        self.verify_version()
-
     def show_message(self, message, caption="Error"):
         """Show a popup message on the FSLeyes interface.
 
@@ -86,65 +93,8 @@ class STControlPanel(ctrlpanel.ControlPanel):
             message (str): message to be displayed
             caption (str): (optional) caption of the message box.
         """
-        with wx.MessageDialog(
-                self,
-                message,
-                caption=caption,
-                style=wx.OK | wx.CENTRE,
-                pos=wx.DefaultPosition,
-        ) as msg:
+        with wx.MessageDialog(self, message, caption=caption, style=wx.OK | wx.CENTRE, pos=wx.DefaultPosition) as msg:
             msg.ShowModal()
-
-    def verify_version(self):
-        """Check if the plugin version is the same as the one in the shimming-toolbox directory."""
-
-        st_path = os.path.realpath(__file__)
-        plugin_file = os.path.join(st_path, "gui", "st_plugin.py")
-
-        plugin_file_exists = os.path.isfile(plugin_file)
-
-        if not plugin_file_exists:
-            return
-
-        # Check the version of the plugin
-        with open(plugin_file) as plugin_file_reader:
-            plugin_file_lines = plugin_file_reader.readlines()
-
-        plugin_file_lines = [x.strip() for x in plugin_file_lines]
-        version_line = f'VERSION = "{VERSION}"'
-        plugin_is_up_to_date = True
-        version_found = False
-
-        for lines in plugin_file_lines:
-            if lines.startswith("VERSION = "):
-                version_found = True
-                if not lines == version_line:
-                    plugin_is_up_to_date = False
-
-        if version_found is False or plugin_is_up_to_date is False:
-            message = """
-                A more recent version of the ShimmingToolbox plugin was found in your
-                ShimmingToolbox installation folder. You will need to replace the current
-                FSLeyes plugin with the new one.
-                To proceed, go to: File -> Load plugin -> st_plugin.py. Then, restart FSLeyes.
-            """
-            self.show_message(message, "Warning")
-        return
-
-    @staticmethod
-    def supportedViews():
-        """I am not sure what this method does."""
-        from fsleyes.views.orthopanel import OrthoPanel
-
-        return [OrthoPanel]
-
-    @staticmethod
-    def defaultLayout():
-        """This method makes the control panel appear on the bottom of the FSLeyes window."""
-        return {
-            "location": wx.BOTTOM,
-            "title": "Shimming Toolbox"
-        }
 
 
 class TabPanel(wx.ScrolledWindow):
@@ -168,7 +118,7 @@ class TabPanel(wx.ScrolledWindow):
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(sizer)
-        self.SetScrollbars(0, 4, 1, 1)
+        self.SetScrollbars(4, 1, 1, 1)
 
 
 class Tab(wx.Panel):
@@ -226,15 +176,19 @@ class InfoComponent(Component):
         sizer = wx.BoxSizer(wx.VERTICAL)
 
         st_logo = self.get_logo()
+        width = st_logo.Size[0]
         sizer.Add(st_logo, flag=wx.SHAPED, proportion=1)
+        sizer.AddSpacer(20)
 
-        button_documentation = wx.Button(self.panel, label="Documentation",
-                                         size=wx.Size(100, 20))
+        # Create a "Documentation" button that redirects towards https://shimming-toolbox.org/en/latest/
+        button_documentation = wx.Button(self.panel, label="Documentation", size=wx.Size(width, 28))
         button_documentation.Bind(wx.EVT_BUTTON, self.documentation_url)
+        logo_rtd = wx.Image(os.path.join(DIR, 'img', 'RTD.png')).Scale(18, 18)
+        button_documentation.SetBitmap(wx.Bitmap(logo_rtd))
         sizer.Add(button_documentation, flag=wx.SHAPED, proportion=1)
 
+        # Add a short description of what the current tab does
         description_text = wx.StaticText(self.panel, id=-1, label=self.description)
-        width = st_logo.Size[0]
         description_text.Wrap(width)
         sizer.Add(description_text)
         return sizer
@@ -258,9 +212,8 @@ class InfoComponent(Component):
         return logo_image
 
     def documentation_url(self, event):
-        """Redirect ``documentation_button`` to the ``shimming-toolbox`` page."""
-        url = "https://shimming-toolbox.org/en/latest/"
-        webbrowser.open(url)
+        """Redirect ``button_documentation`` to the ``shimming-toolbox`` page."""
+        webbrowser.open('https://shimming-toolbox.org/en/latest/')
 
 
 class InputComponent(Component):
@@ -2353,8 +2306,7 @@ def write_image(filename, img, format='png'):
     imageio.imwrite(filename, img, format=format)
 
 
-def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overlayList=True,
-                             colormap="greyscale"):
+def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overlayList=True, colormap="greyscale"):
     """Convert a 2D image into a NIfTI image and load it as an overlay.
 
     The parameter ``add_to_overlayList`` enables displaying the overlay in FSLeyes.
