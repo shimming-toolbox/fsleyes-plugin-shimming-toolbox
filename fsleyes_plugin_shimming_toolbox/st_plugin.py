@@ -178,14 +178,16 @@ class InfoComponent(Component):
         st_logo = self.get_logo()
         width = st_logo.Size[0]
         sizer.Add(st_logo, flag=wx.SHAPED, proportion=1)
-        sizer.AddSpacer(20)
+        sizer.AddSpacer(10)
 
         # Create a "Documentation" button that redirects towards https://shimming-toolbox.org/en/latest/
-        button_documentation = wx.Button(self.panel, label="Documentation", size=wx.Size(width, 28))
-        button_documentation.Bind(wx.EVT_BUTTON, self.documentation_url)
-        logo_rtd = wx.Image(os.path.join(DIR, 'img', 'RTD.png')).Scale(18, 18)
-        button_documentation.SetBitmap(wx.Bitmap(logo_rtd))
-        sizer.Add(button_documentation, flag=wx.SHAPED, proportion=1)
+        button_documentation = wx.Button(self.panel, label="Documentation")
+        button_documentation.Bind(wx.EVT_BUTTON, self.open_documentation_url)
+        logo_rtd = wx.Bitmap(os.path.join(DIR, 'img', 'RTD.png'), wx.BITMAP_TYPE_PNG)
+        button_documentation.SetBitmap(logo_rtd)
+        sizer.Add(button_documentation, flag=wx.EXPAND)
+
+        sizer.AddSpacer(10)
 
         # Add a short description of what the current tab does
         description_text = wx.StaticText(self.panel, id=-1, label=self.description)
@@ -211,7 +213,7 @@ class InfoComponent(Component):
         )
         return logo_image
 
-    def documentation_url(self, event):
+    def open_documentation_url(self, event):
         """Redirect ``button_documentation`` to the ``shimming-toolbox`` page."""
         webbrowser.open('https://shimming-toolbox.org/en/latest/')
 
