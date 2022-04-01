@@ -59,7 +59,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
     def supportedViews():
         """The ``MelodicClassificationPanel`` is restricted for use with
         :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
-        :class:`.Scene3DPanel` viewws.
+        :class:`.Scene3DPanel` views.
         """
 
         return [canvaspanel.CanvasPanel]
@@ -72,17 +72,17 @@ class STControlPanel(ctrlpanel.ControlPanel):
             "title": "Shimming Toolbox"
         }
 
-    def __init__(self, parent, overlayList, displayCtx, viewPanel):
+    def __init__(self, parent, overlayList, displayCtx, ctrlPanel):
         """Initialize the control panel.
 
         Generates the widgets and adds them to the panel.
 
         """
-        super().__init__(parent, overlayList, displayCtx, viewPanel)
-        self.__sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.__sizer.Add(TabPanel(self), flag=wx.EXPAND, proportion=1)
-        self.SetSizer(self.__sizer)
-        self.__sizer.SetMinSize((600, 400))
+        super().__init__(parent, overlayList, displayCtx, ctrlPanel)
+        self.sizer = wx.BoxSizer()
+        self.sizer.Add(TabPanel(self), 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
+        self.sizer.SetMinSize((600, 400))
 
         # Initialize the variables that are used to track the active image
         self.png_image_name = []
@@ -121,15 +121,14 @@ class TabPanel(wx.ScrolledWindow):
         nb.AddPage(tab4, tab4.title, select=True)
         nb.AddPage(tab5, tab5.title)
 
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(nb, 1, wx.EXPAND)
-        self.SetSizer(sizer)
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(nb, 1, wx.EXPAND)
+        self.SetSizer(self.sizer)
         self.SetScrollbars(4, 1, 1, 1)
-
 
 class Tab(wx.Panel):
     def __init__(self, parent, title, description):
-        wx.Panel.__init__(self, parent)
+        super().__init__(parent)
         self.title = title
         self.sizer_info = InfoComponent(self, description).sizer
 
@@ -142,16 +141,13 @@ class Tab(wx.Panel):
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.sizer_info, 0)
         sizer.AddSpacer(30)
-        sizer.Add(self.sizer_run, 1, wx.EXPAND)
+        sizer.Add(self.sizer_run, 2)
         sizer.AddSpacer(30)
         sizer.Add(self.sizer_terminal, 1, wx.EXPAND)
         return sizer
 
     def create_empty_component(self):
-        component = InputComponent(
-            panel=self,
-            input_text_box_metadata=[]
-        )
+        component = InputComponent(panel=self, input_text_box_metadata=[])
         return component
 
 
@@ -164,11 +160,10 @@ class Component:
     def create_sizer(self):
         raise NotImplementedError
 
+    # make sure that the create_sizer method has been implemented in the subclasses
     @classmethod
     def __subclasshook__(cls, subclass):
-        return (hasattr(subclass, 'create_sizer') and
-                callable(subclass.create_sizer) or
-                NotImplemented)
+        return (hasattr(subclass, 'create_sizer') and callable(subclass.create_sizer) or NotImplemented)
 
 
 class InfoComponent(Component):
@@ -204,7 +199,7 @@ class InfoComponent(Component):
     def get_logo(self, scale=0.2):
         """Loads ShimmingToolbox logo saved as a png image and returns it as a wx.Bitmap image.
 
-        Retunrs:
+        Returns:
             wx.StaticBitmap: The ``ShimmingToolbox`` logo
         """
         fname_st_logo = os.path.join(DIR, 'img', 'shimming_toolbox_logo.png')
@@ -212,12 +207,7 @@ class InfoComponent(Component):
         png = wx.Image(fname_st_logo, wx.BITMAP_TYPE_ANY)
         png.Rescale(png.GetWidth() * scale, png.GetHeight() * scale, wx.IMAGE_QUALITY_HIGH)
         bitmap = wx.BitmapFromImage(png)
-        logo_image = wx.StaticBitmap(
-            parent=self.panel,
-            id=-1,
-            bitmap=bitmap,
-            pos=wx.DefaultPosition
-        )
+        logo_image = wx.StaticBitmap(parent=self.panel, id=-1, bitmap=bitmap, pos=wx.DefaultPosition)
         return logo_image
 
     def open_documentation_url(self, event):
@@ -590,8 +580,7 @@ class TerminalComponent(Component):
     def terminal(self, terminal):
         if terminal is None:
             # TODO: Adjust terminal size according to the length of the page, scrollable terminal
-            terminal = wx.TextCtrl(self.panel, wx.ID_ANY, size=(500, 700),
-                                   style=wx.TE_MULTILINE | wx.TE_READONLY)
+            terminal = wx.TextCtrl(self.panel, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY)
             terminal.SetDefaultStyle(wx.TextAttr(wx.WHITE, wx.BLACK))
             terminal.SetBackgroundColour(wx.BLACK)
 
@@ -599,9 +588,9 @@ class TerminalComponent(Component):
 
     def create_sizer(self):
         """Create the right sizer containing the terminal interface."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer = wx.BoxSizer()
         sizer.AddSpacer(10)
-        sizer.Add(self.terminal)
+        sizer.Add(self.terminal, 1, wx.EXPAND)
         return sizer
 
     def log_to_terminal(self, msg, level=None):
@@ -1984,11 +1973,8 @@ def select_file(event, tab, ctrl, focus=False):
         focused = wx.Window.FindFocus()
         if ctrl != focused:
             if focused == tab:
-                tab.terminal_component.log_to_terminal(
-                    "Select a text box from the same row.",
-                    level="INFO"
-                )
-                # If its the tab, don't handle the other events so that the log message is only once
+                tab.terminal_component.log_to_terminal("Select a text box from the same row.", level="INFO")
+                # If it's the tab, don't handle the other events so that the log message is only displayed once
                 return
             event.Skip()
             return
