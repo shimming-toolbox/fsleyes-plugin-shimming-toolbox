@@ -49,6 +49,10 @@ DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
 
+# Load icon resources only once instead of everytime a required input field is created
+asterisk_icon = wx.Image(os.path.join(DIR, 'img', 'asterisk.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+info_icon = wx.Image(os.path.join(DIR, 'img', 'info-icon.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+
 
 # We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
 # Class hierarchy: wx.Panel > fslpanel.FSLeyesPanel > ctrlpanel.ControlPanel
@@ -127,11 +131,6 @@ class TabPanel(wx.ScrolledWindow):
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
-        self.SetScrollbars(4, 1, 1, 1)
-
-        nb.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.tab_change)
-
-    def tab_change(self, event):
         self.SetScrollbars(4, 1, 1, 1)
 
 
@@ -1896,28 +1895,17 @@ class TextWithButton:
         for textctrl in self.textctrl_list:
             text_with_button_box.Add(textctrl, 1, wx.ALIGN_LEFT | wx.LEFT, 10)
             if self.required:
-                text_with_button_box.Add(
-                    create_asterisk_icon(self.panel), 0, wx.RIGHT, 7
-                )
+                text_with_button_box.Add(create_asterisk_icon(self.panel), 0, wx.RIGHT, 7)
 
         return text_with_button_box
 
 
 def create_asterisk_icon(panel):
-    bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION)
-    info_icon = os.path.join(DIR, 'img', 'asterisk.png')
-    img = wx.Image(info_icon, wx.BITMAP_TYPE_ANY)
-    bmp = img.ConvertToBitmap()
-    image = wx.StaticBitmap(panel, bitmap=bmp)
-    return image
+    return wx.StaticBitmap(panel, bitmap=asterisk_icon)
 
 
 def create_info_icon(panel, info_text=""):
-    bmp = wx.ArtProvider.GetBitmap(wx.ART_INFORMATION)
-    info_icon = os.path.join(DIR, 'img', 'info-icon.png')
-    img = wx.Image(info_icon, wx.BITMAP_TYPE_ANY)
-    bmp = img.ConvertToBitmap()
-    image = InfoIcon(panel, bitmap=bmp, info_text=info_text)
+    image = InfoIcon(panel, bitmap=info_icon, info_text=info_text)
     image.Bind(wx.EVT_MOTION, on_info_icon_mouse_over)
     return image
 
