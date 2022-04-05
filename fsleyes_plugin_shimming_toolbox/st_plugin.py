@@ -1912,10 +1912,7 @@ def create_info_icon(panel, info_text=""):
 
 def on_info_icon_mouse_over(event):
     image = event.GetEventObject()
-    tooltip = wx.ToolTip(image.info_text)
-    # TODO: Reduce this, It does not seem to be affected since it is ms
-    tooltip.SetDelay(10)
-    image.SetToolTip(tooltip)
+    image.SetToolTip(wx.ToolTip(image.info_text))
 
 
 class InfoIcon(wx.StaticBitmap):
@@ -1931,17 +1928,13 @@ def select_folder(event, tab, ctrl, focus=False):
         focused = wx.Window.FindFocus()
         if ctrl != focused:
             if focused == tab:
-                tab.terminal_component.log_to_terminal(
-                    "Select a text box from the same row.",
-                    level="INFO"
-                )
-                # If its the tab, don't handle the other events so that the log message is only once
+                tab.terminal_component.log_to_terminal("Select a text box from the same row.", level="INFO")
+                # If its the tab, don't handle the other events so that the message is only logged once
                 return
             event.Skip()
             return
 
-    dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR,
-                       wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+    dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR, wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
         folder = dlg.GetPath()
