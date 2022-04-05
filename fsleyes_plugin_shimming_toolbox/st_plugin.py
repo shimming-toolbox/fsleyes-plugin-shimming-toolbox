@@ -49,19 +49,14 @@ DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
 
-
 # We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
 # Class hierarchy: wx.Panel > fslpanel.FSLeyesPanel > ctrlpanel.ControlPanel
 class STControlPanel(ctrlpanel.ControlPanel):
     """Class for Shimming Toolbox Control Panel"""
 
+    # The CanvasPanel view is used for most FSLeyes plugins so we decided to stick to it
     @staticmethod
     def supportedViews():
-        """The ``MelodicClassificationPanel`` is restricted for use with
-        :class:`.OrthoPanel`, :class:`.LightBoxPanel` and
-        :class:`.Scene3DPanel` views.
-        """
-
         return [canvaspanel.CanvasPanel]
 
     @staticmethod
@@ -78,9 +73,16 @@ class STControlPanel(ctrlpanel.ControlPanel):
         Generates the widgets and adds them to the panel.
 
         """
+
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-        self.sizer = wx.BoxSizer()
-        self.sizer.Add(TabPanel(self), 1, wx.EXPAND)
+        # Terminal component must be created before calling TabPanel()
+        self.terminal_component = TerminalComponent(self)
+        self.terminal_sizer = self.terminal_component.sizer
+        self.tab_panel = TabPanel(self)
+
+        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.Add(self.tab_panel, 2, wx.EXPAND)
+        self.sizer.Add(self.terminal_sizer, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.sizer.SetMinSize((600, 400))
 
@@ -106,8 +108,8 @@ class STControlPanel(ctrlpanel.ControlPanel):
 class TabPanel(wx.ScrolledWindow):
     def __init__(self, parent):
         super().__init__(parent=parent)
-
         nb = wx.Notebook(self)
+        nb.terminal_component = parent.terminal_component
         tab1 = DicomToNiftiTab(nb)
         tab2 = FieldMapTab(nb)
         tab3 = MaskTab(nb)
@@ -131,19 +133,18 @@ class Tab(wx.Panel):
         super().__init__(parent)
         self.title = title
         self.sizer_info = InfoComponent(self, description).sizer
+        self.terminal_component = parent.terminal_component
 
     def create_sizer(self):
         """Create the parent sizer for the tab.
 
-        Tab is divided into 3 main sizers:
-            sizer_info | sizer_run | sizer_terminal
+        Tab is divided into 2 main sizers:
+            sizer_info | sizer_run
         """
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.sizer_info, 0)
         sizer.AddSpacer(30)
         sizer.Add(self.sizer_run, 2)
-        sizer.AddSpacer(30)
-        sizer.Add(self.sizer_terminal, 1, wx.EXPAND)
         return sizer
 
     def create_empty_component(self):
@@ -629,8 +630,8 @@ class B0ShimTab(Tab):
 
         self.create_choice_box()
 
-        self.terminal_component = TerminalComponent(self)
-        self.sizer_terminal = self.terminal_component.sizer
+        # self.terminal_component = TerminalComponent(self)
+        # self.sizer_terminal = self.terminal_component.sizer
 
         self.create_dropdown_sizers()
         self.parent_sizer = self.create_sizer()
@@ -1213,9 +1214,6 @@ class B1ShimTab(Tab):
 
         self.create_choice_box()
 
-        self.terminal_component = TerminalComponent(self)
-        self.sizer_terminal = self.terminal_component.sizer
-
         self.create_dropdown_sizers()
         self.parent_sizer = self.create_sizer()
         self.SetSizer(self.parent_sizer)
@@ -1541,7 +1539,6 @@ class FieldMapTab(Tab):
                 "required": True
             }
         ]
-        self.terminal_component = TerminalComponent(panel=self)
         self.component_input = InputComponent(
             panel=self,
             input_text_box_metadata=input_text_box_metadata_input
@@ -1567,7 +1564,6 @@ class FieldMapTab(Tab):
             st_function="st_prepare_fieldmap"
         )
         self.sizer_run = self.run_component.sizer
-        self.sizer_terminal = self.terminal_component.sizer
         sizer = self.create_sizer()
         self.SetSizer(sizer)
 
@@ -1596,9 +1592,6 @@ class MaskTab(Tab):
         ]
         self.dropdown_choices = [item["name"] for item in self.dropdown_metadata]
         self.create_choice_box()
-
-        self.terminal_component = TerminalComponent(self)
-        self.sizer_terminal = self.terminal_component.sizer
 
         self.create_dropdown_sizers()
         self.parent_sizer = self.create_sizer()
@@ -1796,7 +1789,6 @@ class DicomToNiftiTab(Tab):
                 "info_text": f"{dicom_to_nifti_cli.params[2].help}"
             }
         ]
-        self.terminal_component = TerminalComponent(self)
         component = InputComponent(self, input_text_box_metadata)
         run_component = RunComponent(
             panel=self,
@@ -1804,7 +1796,6 @@ class DicomToNiftiTab(Tab):
             st_function="st_dicom_to_nifti"
         )
         self.sizer_run = run_component.sizer
-        self.sizer_terminal = self.terminal_component.sizer
         sizer = self.create_sizer()
         self.SetSizer(sizer)
 
