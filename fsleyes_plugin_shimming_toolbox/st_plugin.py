@@ -49,6 +49,7 @@ DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
 
+
 # We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
 # Class hierarchy: wx.Panel > fslpanel.FSLeyesPanel > ctrlpanel.ControlPanel
 class STControlPanel(ctrlpanel.ControlPanel):
@@ -75,7 +76,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
         """
 
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-        # Terminal component must be created before calling TabPanel() because it is used in child Tab instances
+        # Terminal component must be created before calling TabPanel() because it is referenced in child Tab instances
         self.terminal_component = TerminalComponent(self)
         self.tab_panel = TabPanel(self)
 
@@ -95,7 +96,6 @@ class STControlPanel(ctrlpanel.ControlPanel):
         # Create a temporary directory that will hold the NIfTI files
         self.st_temp_dir = tempfile.TemporaryDirectory()
 
-
     def show_message(self, message, caption="Error"):
         """Show a popup message on the FSLeyes interface.
 
@@ -111,8 +111,6 @@ class TabPanel(wx.ScrolledWindow):
     def __init__(self, parent):
         super().__init__(parent=parent)
         nb = wx.Notebook(self)
-        self.nb = nb
-        self.parent =parent
         nb.terminal_component = parent.terminal_component
         tab1 = DicomToNiftiTab(nb)
         tab2 = FieldMapTab(nb)
@@ -126,19 +124,15 @@ class TabPanel(wx.ScrolledWindow):
         nb.AddPage(tab3, tab3.title)
         nb.AddPage(tab4, tab4.title, select=True)
         nb.AddPage(tab5, tab5.title)
-
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.SetScrollbars(4, 1, 1, 1)
 
-    #     nb.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_page_change)
-    #
-    # def on_page_change(self, event):
-    #     # page = self.nb.GetPage(event.GetSelection())
-    #     _, height = self.GetSize()
-    #     width, _ = self.sizer.GetSize()
-    #     self.SetSize((width+15, height))
+        nb.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.tab_change)
+
+    def tab_change(self, event):
+        self.SetScrollbars(4, 1, 1, 1)
 
 
 class Tab(wx.Panel):
@@ -532,8 +526,7 @@ class RunComponent(Component):
                             if arg == "" or arg is None:
                                 if input_text_box.required is True:
                                     raise RunArgumentErrorST(
-                                        f"""Argument {name} is missing a value, please enter a
-                                            valid input"""
+                                        f"Argument {name} is missing a value, please enter a valid input"
                                     )
                             else:
                                 # Case where the option name is set to arg, this handles it as if it were an argument
