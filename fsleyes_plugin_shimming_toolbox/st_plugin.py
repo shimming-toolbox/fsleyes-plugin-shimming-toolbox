@@ -75,16 +75,17 @@ class STControlPanel(ctrlpanel.ControlPanel):
         """
 
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-        # Terminal component must be created before calling TabPanel()
+        # Terminal component must be created before calling TabPanel() because it is used in child Tab instances
         self.terminal_component = TerminalComponent(self)
-        self.terminal_sizer = self.terminal_component.sizer
         self.tab_panel = TabPanel(self)
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sizer.Add(self.tab_panel, 2, wx.EXPAND)
-        self.sizer.Add(self.terminal_sizer, 1, wx.EXPAND)
-        self.SetSizer(self.sizer)
+        self.sizer.AddSpacer(10)
+        self.sizer.Add(self.terminal_component.sizer, 1, wx.EXPAND)
+        self.sizer.AddSpacer(10)
         self.sizer.SetMinSize((600, 400))
+        self.SetSizer(self.sizer)
 
         # Initialize the variables that are used to track the active image
         self.png_image_name = []
@@ -93,6 +94,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
 
         # Create a temporary directory that will hold the NIfTI files
         self.st_temp_dir = tempfile.TemporaryDirectory()
+
 
     def show_message(self, message, caption="Error"):
         """Show a popup message on the FSLeyes interface.
@@ -109,6 +111,8 @@ class TabPanel(wx.ScrolledWindow):
     def __init__(self, parent):
         super().__init__(parent=parent)
         nb = wx.Notebook(self)
+        self.nb = nb
+        self.parent =parent
         nb.terminal_component = parent.terminal_component
         tab1 = DicomToNiftiTab(nb)
         tab2 = FieldMapTab(nb)
@@ -127,6 +131,15 @@ class TabPanel(wx.ScrolledWindow):
         self.sizer.Add(nb, 1, wx.EXPAND)
         self.SetSizer(self.sizer)
         self.SetScrollbars(4, 1, 1, 1)
+
+    #     nb.Bind(wx.EVT_NOTEBOOK_PAGE_CHANGED, self.on_page_change)
+    #
+    # def on_page_change(self, event):
+    #     # page = self.nb.GetPage(event.GetSelection())
+    #     _, height = self.GetSize()
+    #     width, _ = self.sizer.GetSize()
+    #     self.SetSize((width+15, height))
+
 
 class Tab(wx.Panel):
     def __init__(self, parent, title, description):
@@ -589,9 +602,10 @@ class TerminalComponent(Component):
 
     def create_sizer(self):
         """Create the right sizer containing the terminal interface."""
-        sizer = wx.BoxSizer()
+        sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.AddSpacer(10)
         sizer.Add(self.terminal, 1, wx.EXPAND)
+        sizer.AddSpacer(10)
         return sizer
 
     def log_to_terminal(self, msg, level=None):
