@@ -46,4 +46,3 @@ sed_i 's/^ENABLE_USER_SITE.*$/ENABLE_USER_SITE = False/' "$ST_DIR/$PYTHON_DIR/li
 
 # activate miniconda
 # shellcheck disable=SC1091
-source python/etc/profile.d/conda.sh

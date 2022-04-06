@@ -31,7 +31,7 @@ function edit_shellrc() {
   fi
 }
 
-#source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh # TODO: necessary?
+source $ST_DIR/$PYTHON_DIR/bin/activate
 
 # Install fsleyes
 print info "Installing fsleyes"
