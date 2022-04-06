@@ -31,15 +31,15 @@ function edit_shellrc() {
   fi
 }
 
-source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh
+#source $ST_DIR/$PYTHON_DIR/etc/profile.d/conda.sh # TODO: necessary?
 
 # Install fsleyes
 print info "Installing fsleyes"
-$ST_DIR/$PYTHON_DIR/bin/conda install -y -c conda-forge fsleyes=1.3.3
+"$ST_DIR"/"$PYTHON_DIR"/bin/conda install -y -c conda-forge fsleyes=1.3.3
 
 # Install fsleyes-plugin-shimming-toolbox
 print info "Installing fsleyes-plugin-shimming-toolbox"
-$ST_DIR/$PYTHON_DIR/bin/python -m pip install .
+"$ST_DIR"/"$PYTHON_DIR"/bin/python -m pip install .
 
 # Create launchers
 print info "Creating launcher for fsleyes-plugin-shimming-toolbox..."
