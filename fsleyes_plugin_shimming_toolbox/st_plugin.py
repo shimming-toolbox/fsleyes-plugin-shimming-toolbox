@@ -26,7 +26,6 @@ import logging
 import nibabel as nib
 import numpy as np
 import os
-import tempfile
 import webbrowser
 import wx
 
@@ -49,7 +48,7 @@ DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
 
-# Load icon resources only once instead of everytime a required input field is created
+# Load icon resources
 asterisk_icon = wx.Image(os.path.join(DIR, 'img', 'asterisk.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
 info_icon = wx.Image(os.path.join(DIR, 'img', 'info-icon.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
 
@@ -67,10 +66,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
     @staticmethod
     def defaultLayout():
         """This method makes the control panel appear on the top of the FSLeyes window."""
-        return {
-            "location": wx.TOP,
-            "title": "Shimming Toolbox"
-        }
+        return { "location": wx.TOP, "title": "Shimming Toolbox"}
 
     def __init__(self, parent, overlayList, displayCtx, ctrlPanel):
         """Initialize the control panel.
@@ -80,66 +76,41 @@ class STControlPanel(ctrlpanel.ControlPanel):
         """
 
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-        # Terminal component must be created before calling TabPanel() because it is referenced in child Tab instances
-        self.terminal_component = TerminalComponent(self)
-        self.tab_panel = TabPanel(self)
 
-        self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sizer.Add(self.tab_panel, 2, wx.EXPAND)
-        self.sizer.AddSpacer(10)
-        self.sizer.Add(self.terminal_component.sizer, 1, wx.EXPAND)
-        self.sizer.AddSpacer(10)
-        self.sizer.SetMinSize((600, 400))
-        self.SetSizer(self.sizer)
-
-        # Initialize the variables that are used to track the active image
-        self.png_image_name = []
-        self.image_dir_path = []
-        self.most_recent_watershed_mask_name = None
-
-        # Create a temporary directory that will hold the NIfTI files
-        self.st_temp_dir = tempfile.TemporaryDirectory()
-
-    def show_message(self, message, caption="Error"):
-        """Show a popup message on the FSLeyes interface.
-
-        Args:
-            message (str): message to be displayed
-            caption (str): (optional) caption of the message box.
-        """
-        with wx.MessageDialog(self, message, caption=caption, style=wx.OK | wx.CENTRE, pos=wx.DefaultPosition) as msg:
-            msg.ShowModal()
-
-
-class TabPanel(wx.ScrolledWindow):
-    def __init__(self, parent):
-        super().__init__(parent=parent)
+        # Create anotebook to navigate between the different functions.
         nb = wx.Notebook(self)
-        nb.terminal_component = parent.terminal_component
+
+        # Add Terminal to log messages
+        nb.terminal_component = Terminal(self)
+
+        # Create the different tabs. Use 'select' to choose the default tab displayed at startup
         tab1 = DicomToNiftiTab(nb)
         tab2 = FieldMapTab(nb)
         tab3 = MaskTab(nb)
         tab4 = B0ShimTab(nb)
         tab5 = B1ShimTab(nb)
-
-        # Add the windows to tabs and name them. Use 'select' to choose the default tab displayed at startup
         nb.AddPage(tab1, tab1.title)
         nb.AddPage(tab2, tab2.title)
         nb.AddPage(tab3, tab3.title)
         nb.AddPage(tab4, tab4.title, select=True)
         nb.AddPage(tab5, tab5.title)
+
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.sizer.Add(nb, 1, wx.EXPAND)
+        self.sizer.Add(nb, 2, wx.EXPAND)
+        self.sizer.AddSpacer(5)
+        self.sizer.Add(nb.terminal_component.sizer, 1, wx.EXPAND)
+        self.sizer.AddSpacer(5)
+        self.sizer.SetMinSize((600, 400))
         self.SetSizer(self.sizer)
-        self.SetScrollbars(4, 1, 1, 1)
 
 
-class Tab(wx.Panel):
+class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
         self.title = title
         self.sizer_info = InfoComponent(self, description).sizer
         self.terminal_component = parent.terminal_component
+        self.SetScrollbars(4,1,1,1)
 
     def create_sizer(self):
         """Create the parent sizer for the tab.
@@ -156,6 +127,25 @@ class Tab(wx.Panel):
     def create_empty_component(self):
         component = InputComponent(panel=self, input_text_box_metadata=[])
         return component
+
+
+class Terminal:
+    """Create the terminal where messages are logged to the user."""
+    def __init__(self, panel):
+        self.panel = panel
+        self.terminal = wx.TextCtrl(self.panel, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY)
+        self.terminal.SetDefaultStyle(wx.TextAttr(wx.WHITE, wx.BLACK))
+        self.terminal.SetBackgroundColour(wx.BLACK)
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer.AddSpacer(5)
+        self.sizer.Add(self.terminal, 1, wx.EXPAND)
+        self.sizer.AddSpacer(5)
+
+    def log_to_terminal(self, msg, level=None):
+        if level is None:
+            self.terminal.AppendText(f"{msg}\n")
+        else:
+            self.terminal.AppendText(f"{level}: {msg}\n")
 
 
 class Component:
@@ -440,7 +430,7 @@ class RunComponent(Component):
 
             # Get the directory of the output if it is a file or already a directory
             if os.path.isfile(self.output):
-                folder = get_folder(self.output)
+                folder = os.path.split(self.output)[0]
             else:
                 folder = self.output
 
@@ -572,41 +562,6 @@ class RunComponent(Component):
             return path_output, subject
 
 
-class TerminalComponent(Component):
-    def __init__(self, panel, list_components=[]):
-        super().__init__(panel, list_components)
-        self.terminal = None
-        self.sizer = self.create_sizer()
-
-    @property
-    def terminal(self):
-        return self._terminal
-
-    @terminal.setter
-    def terminal(self, terminal):
-        if terminal is None:
-            # TODO: Adjust terminal size according to the length of the page, scrollable terminal
-            terminal = wx.TextCtrl(self.panel, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY)
-            terminal.SetDefaultStyle(wx.TextAttr(wx.WHITE, wx.BLACK))
-            terminal.SetBackgroundColour(wx.BLACK)
-
-        self._terminal = terminal
-
-    def create_sizer(self):
-        """Create the right sizer containing the terminal interface."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.AddSpacer(10)
-        sizer.Add(self.terminal, 1, wx.EXPAND)
-        sizer.AddSpacer(10)
-        return sizer
-
-    def log_to_terminal(self, msg, level=None):
-        if level is None:
-            self.terminal.AppendText(f"{msg}\n")
-        else:
-            self.terminal.AppendText(f"{level}: {msg}\n")
-
-
 class B0ShimTab(Tab):
     def __init__(self, parent, title="B0 Shim"):
 
@@ -635,9 +590,6 @@ class B0ShimTab(Tab):
         self.component_coils_rt = None
 
         self.create_choice_box()
-
-        # self.terminal_component = TerminalComponent(self)
-        # self.sizer_terminal = self.terminal_component.sizer
 
         self.create_dropdown_sizers()
         self.parent_sizer = self.create_sizer()
@@ -1796,11 +1748,7 @@ class DicomToNiftiTab(Tab):
             }
         ]
         component = InputComponent(self, input_text_box_metadata)
-        run_component = RunComponent(
-            panel=self,
-            list_components=[component],
-            st_function="st_dicom_to_nifti"
-        )
+        run_component = RunComponent(panel=self, list_components=[component], st_function="st_dicom_to_nifti")
         self.sizer_run = run_component.sizer
         sizer = self.create_sizer()
         self.SetSizer(sizer)
@@ -1895,13 +1843,9 @@ class TextWithButton:
         for textctrl in self.textctrl_list:
             text_with_button_box.Add(textctrl, 1, wx.ALIGN_LEFT | wx.LEFT, 10)
             if self.required:
-                text_with_button_box.Add(create_asterisk_icon(self.panel), 0, wx.RIGHT, 7)
+                text_with_button_box.Add(wx.StaticBitmap(self.panel, bitmap=asterisk_icon), 0, wx.RIGHT, 7)
 
         return text_with_button_box
-
-
-def create_asterisk_icon(panel):
-    return wx.StaticBitmap(panel, bitmap=asterisk_icon)
 
 
 def create_info_icon(panel, info_text=""):
@@ -2260,14 +2204,3 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
-
-
-def get_folder(path):
-    if is_file(path):
-        return os.path.split(path)[0]
-    else:
-        return path
-
-
-def is_file(path):
-    return '.' in Path(path).name
