@@ -111,9 +111,9 @@ class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
         self.title = title
-        self.sizer_info = InfoComponent(self, description).sizer
+        self.sizer_info = InfoSection(self, description).sizer
         self.terminal_component = parent.terminal_component
-        self.SetScrollbars(4,1,1,1)
+        self.SetScrollbars(0, 4, 1, 1)
 
     def create_sizer(self):
         """Create the parent sizer for the tab.
@@ -166,9 +166,9 @@ class Component:
         return (hasattr(subclass, 'create_sizer') and callable(subclass.create_sizer) or NotImplemented)
 
 
-class InfoComponent(Component):
+class InfoSection:
     def __init__(self, panel, description):
-        super().__init__(panel)
+        self.panel = panel
         self.description = description
         self.sizer = self.create_sizer()
 
@@ -398,7 +398,6 @@ class RunComponent(Component):
         button_run.SetBitmap(play_icon, dir=wx.TOP)
         self.sizer.Add(button_run, 0, wx.CENTRE)
         self.sizer.AddSpacer(10)
-
 
     def button_run_on_click(self, event):
         """Function called when the ``Run`` button is clicked.
