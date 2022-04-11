@@ -51,6 +51,12 @@ VERSION = "0.1.1"
 # Load icon resources
 asterisk_icon = wx.Image(os.path.join(DIR, 'img', 'asterisk.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
 info_icon = wx.Image(os.path.join(DIR, 'img', 'info-icon.png'), wx.BITMAP_TYPE_PNG).ConvertToBitmap()
+play_icon = wx.Bitmap(os.path.join(DIR, 'img', 'play.png'), wx.BITMAP_TYPE_PNG)
+rtd_logo = wx.Bitmap(os.path.join(DIR, 'img', 'RTD.png'), wx.BITMAP_TYPE_PNG)
+# Load ShimmingToolbox logo saved as a png image, rescale it, and return it as a wx.Bitmap image.
+st_logo = wx.Image(os.path.join(DIR, 'img', 'shimming_toolbox_logo.png'), wx.BITMAP_TYPE_PNG)
+st_logo.Rescale(st_logo.GetWidth() * 0.2, st_logo.GetHeight() * 0.2, wx.IMAGE_QUALITY_HIGH)
+st_logo = st_logo.ConvertToBitmap()
 
 
 # We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
@@ -74,13 +80,11 @@ class STControlPanel(ctrlpanel.ControlPanel):
         Generates the widgets and adds them to the panel.
 
         """
-
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-
-        # Create anotebook to navigate between the different functions.
+        # Create a notebook to navigate between the different functions.
         nb = wx.Notebook(self)
 
-        # Add Terminal to log messages
+        # Add a terminal to log messages
         nb.terminal_component = Terminal(self)
 
         # Create the different tabs. Use 'select' to choose the default tab displayed at startup
@@ -97,7 +101,6 @@ class STControlPanel(ctrlpanel.ControlPanel):
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.sizer.Add(nb, 2, wx.EXPAND)
-        self.sizer.AddSpacer(5)
         self.sizer.Add(nb.terminal_component.sizer, 1, wx.EXPAND)
         self.sizer.AddSpacer(5)
         self.sizer.SetMinSize((600, 400))
@@ -120,7 +123,7 @@ class Tab(wx.ScrolledWindow):
         """
         sizer = wx.BoxSizer(wx.HORIZONTAL)
         sizer.Add(self.sizer_info, 0)
-        sizer.AddSpacer(30)
+        sizer.AddSpacer(20)
         sizer.Add(self.sizer_run, 2)
         return sizer
 
@@ -172,19 +175,16 @@ class InfoComponent(Component):
     def create_sizer(self):
         """Create the left sizer containing generic Shimming Toolbox information."""
         sizer = wx.BoxSizer(wx.VERTICAL)
-
-        st_logo = self.get_logo()
-        width = st_logo.Size[0]
-        sizer.Add(st_logo, flag=wx.SHAPED, proportion=1)
+        logo = wx.StaticBitmap(parent=self.panel, id=-1, bitmap=st_logo, pos=wx.DefaultPosition)
+        width = logo.Size[0]
+        sizer.Add(logo, flag=wx.SHAPED, proportion=1)
         sizer.AddSpacer(10)
 
         # Create a "Documentation" button that redirects towards https://shimming-toolbox.org/en/latest/
         button_documentation = wx.Button(self.panel, label="Documentation")
         button_documentation.Bind(wx.EVT_BUTTON, self.open_documentation_url)
-        logo_rtd = wx.Bitmap(os.path.join(DIR, 'img', 'RTD.png'), wx.BITMAP_TYPE_PNG)
-        button_documentation.SetBitmap(logo_rtd)
+        button_documentation.SetBitmap(rtd_logo)
         sizer.Add(button_documentation, flag=wx.EXPAND)
-
         sizer.AddSpacer(10)
 
         # Add a short description of what the current tab does
@@ -192,20 +192,6 @@ class InfoComponent(Component):
         description_text.Wrap(width)
         sizer.Add(description_text)
         return sizer
-
-    def get_logo(self, scale=0.2):
-        """Loads ShimmingToolbox logo saved as a png image and returns it as a wx.Bitmap image.
-
-        Returns:
-            wx.StaticBitmap: The ``ShimmingToolbox`` logo
-        """
-        fname_st_logo = os.path.join(DIR, 'img', 'shimming_toolbox_logo.png')
-
-        png = wx.Image(fname_st_logo, wx.BITMAP_TYPE_ANY)
-        png.Rescale(png.GetWidth() * scale, png.GetHeight() * scale, wx.IMAGE_QUALITY_HIGH)
-        bitmap = wx.BitmapFromImage(png)
-        logo_image = wx.StaticBitmap(parent=self.panel, id=-1, bitmap=bitmap, pos=wx.DefaultPosition)
-        return logo_image
 
     def open_documentation_url(self, event):
         """Redirect ``button_documentation`` to the ``shimming-toolbox`` page."""
@@ -407,10 +393,12 @@ class RunComponent(Component):
 
     def add_button_run(self):
         """Add the run button which will call the ``Shimming Toolbox`` CLI."""
-        button_run = wx.Button(self.panel, -1, label="Run")
+        button_run = wx.Button(self.panel, -1, label="", size=(48, 48))
         button_run.Bind(wx.EVT_BUTTON, self.button_run_on_click)
+        button_run.SetBitmap(play_icon, dir=wx.TOP)
         self.sizer.Add(button_run, 0, wx.CENTRE)
         self.sizer.AddSpacer(10)
+
 
     def button_run_on_click(self, event):
         """Function called when the ``Run`` button is clicked.
@@ -514,7 +502,7 @@ class RunComponent(Component):
                             arg = textctrl.GetValue()
                             if arg == "" or arg is None:
                                 if input_text_box.required is True:
-                                    raise RunArgumentErrorST(
+                                    raise self.RunArgumentErrorST(
                                         f"Argument {name} is missing a value, please enter a valid input"
                                     )
                             else:
@@ -545,6 +533,10 @@ class RunComponent(Component):
         msg += command
         msg += "\n"
         return command, msg
+
+    class RunArgumentErrorST(Exception):
+        """Exception for missing input arguments for CLI call."""
+        pass
 
     def fetch_paths_dicom_to_nifti(self):
         if self.st_function == "st_dicom_to_nifti":
@@ -2128,11 +2120,6 @@ def add_input_coil_boxes(event, tab, ctrl, i=0):
         tab.n_coils_rt = n_coils
 
     tab.Layout()
-
-
-class RunArgumentErrorST(Exception):
-    """Exception for missing input arguments for CLI call."""
-    pass
 
 
 def read_image(filename, bitdepth=8):
