@@ -110,10 +110,11 @@ class STControlPanel(ctrlpanel.ControlPanel):
 class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
+        self.teststring="TEST"
         self.title = title
         self.sizer_info = InfoSection(self, description).sizer
         self.terminal_component = parent.terminal_component
-        self.SetScrollbars(0, 4, 1, 1)
+        self.SetScrollbars(1, 1, 1, 1)
 
     def create_sizer(self):
         """Create the parent sizer for the tab.
@@ -1974,15 +1975,9 @@ def add_input_phase_boxes(event, tab, ctrl):
             raise Exception()
         elif n_echoes > 6:
             n_echoes = 6
-            tab.terminal_component.log_to_terminal(
-                "Number of echoes limited to 6",
-                level="WARNING"
-            )
+            tab.terminal_component.log_to_terminal("Number of echoes limited to 6", level="WARNING")
     except Exception:
-        tab.terminal_component.log_to_terminal(
-            "Number of Echoes must be an integer > 0",
-            level="ERROR"
-        )
+        tab.terminal_component.log_to_terminal("Number of Echoes must be an integer > 0", level="ERROR")
         return
 
     insert_index = 2
@@ -2017,7 +2012,7 @@ def add_input_phase_boxes(event, tab, ctrl):
             )
 
     tab.n_echoes = n_echoes
-    tab.Layout()
+    tab.SetVirtualSize(tab.sizer_run.GetMinSize())
 
 
 def add_input_coil_boxes(event, tab, ctrl, i=0):
@@ -2051,16 +2046,10 @@ def add_input_coil_boxes(event, tab, ctrl, i=0):
             raise Exception()
         elif n_coils > 5:
             n_coils = 5
-            tab.terminal_component.log_to_terminal(
-                "Number of coils limited to 5",
-                level="WARNING"
-            )
+            tab.terminal_component.log_to_terminal("Number of coils limited to 5", level="WARNING")
 
     except Exception:
-        tab.terminal_component.log_to_terminal(
-            "Number of coils must be an integer >= 0",
-            level="ERROR"
-        )
+        tab.terminal_component.log_to_terminal("Number of coils must be an integer >= 0", level="ERROR")
         n_coils = 0
 
     # Depending on the index, select the appropriate component
@@ -2118,7 +2107,7 @@ def add_input_coil_boxes(event, tab, ctrl, i=0):
     elif i == 2:
         tab.n_coils_rt = n_coils
 
-    tab.Layout()
+    tab.SetVirtualSize(tab.sizer_run.GetMinSize())
 
 
 def read_image(filename, bitdepth=8):
