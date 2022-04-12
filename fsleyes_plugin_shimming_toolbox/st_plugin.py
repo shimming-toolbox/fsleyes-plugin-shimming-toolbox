@@ -110,7 +110,6 @@ class STControlPanel(ctrlpanel.ControlPanel):
 class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
-        self.teststring="TEST"
         self.title = title
         self.sizer_info = InfoSection(self, description).sizer
         self.terminal_component = parent.terminal_component
@@ -164,7 +163,7 @@ class Component:
     # make sure that the create_sizer method has been implemented in the subclasses
     @classmethod
     def __subclasshook__(cls, subclass):
-        return (hasattr(subclass, 'create_sizer') and callable(subclass.create_sizer) or NotImplemented)
+        return hasattr(subclass, 'create_sizer') and callable(subclass.create_sizer) or NotImplemented
 
 
 class InfoSection:

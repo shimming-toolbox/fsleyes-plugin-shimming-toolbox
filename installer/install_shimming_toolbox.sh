@@ -37,4 +37,5 @@ cp "${ST_DIR}/shimming-toolbox/config/coil_config.json" "${ST_DIR}/coil_config.j
 $ST_DIR/python/envs/pst_venv/bin/python -m pip install -e . --quiet
 
 print info "To launch the plugin, load the environment variables then run:"
+
 print list "shimming-toolbox"
