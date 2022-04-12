@@ -885,6 +885,11 @@ class B0ShimTab(Tab):
 
         dropdown_slice_metadata = [
             {
+                "label": "Auto detect",
+                "option_name": "slices",
+                "option_value": "auto"
+            },
+            {
                 "label": "Sequential",
                 "option_name": "slices",
                 "option_value": "sequential"
@@ -906,7 +911,10 @@ class B0ShimTab(Tab):
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
             info_text="Defines the slice ordering.",
-            list_components=[component_slice_int, component_slice_seq, self.create_empty_component()]
+            list_components=[self.create_empty_component(),
+                             component_slice_seq,
+                             component_slice_int,
+                             self.create_empty_component()]
         )
 
         dropdown_coil_format_metadata = [
@@ -1149,6 +1157,11 @@ class B0ShimTab(Tab):
 
         dropdown_slice_metadata = [
             {
+                "label": "Auto detect",
+                "option_name": "slices",
+                "option_value": "auto"
+            },
+            {
                 "label": "Sequential",
                 "option_name": "slices",
                 "option_value": "sequential"
@@ -1169,8 +1182,11 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
-            info_text=f"{realtime_cli.params[8].help}",
-            list_components=[component_slice_int, component_slice_seq, self.create_empty_component()]
+            info_text="Defines the slice ordering.",
+            list_components=[self.create_empty_component(),
+                             component_slice_seq,
+                             component_slice_int,
+                             self.create_empty_component()]
         )
 
         dropdown_coil_format_metadata = [
