@@ -72,7 +72,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
     @staticmethod
     def defaultLayout():
         """This method makes the control panel appear on the top of the FSLeyes window."""
-        return { "location": wx.TOP, "title": "Shimming Toolbox"}
+        return {"location": wx.TOP, "title": "Shimming Toolbox"}
 
     def __init__(self, parent, overlayList, displayCtx, ctrlPanel):
         """Initialize the control panel.
