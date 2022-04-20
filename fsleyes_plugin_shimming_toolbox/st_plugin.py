@@ -81,11 +81,8 @@ class STControlPanel(ctrlpanel.ControlPanel):
 
         """
         super().__init__(parent, overlayList, displayCtx, ctrlPanel)
-        # Create a notebook to navigate between the different functions.
-        nb = wx.Notebook(self)
-
-        # Add a terminal to log messages
-        nb.terminal_component = Terminal(self)
+        # Create a notebook with a terminal to navigate between the different functions.
+        nb = NotebookTerminal(self)
 
         # Create the different tabs. Use 'select' to choose the default tab displayed at startup
         tab1 = DicomToNiftiTab(nb)
@@ -107,6 +104,13 @@ class STControlPanel(ctrlpanel.ControlPanel):
         self.SetSizer(self.sizer)
 
 
+class NotebookTerminal(wx.Notebook):
+    """Notebook class with an extra terminal attribute"""
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.terminal_component = Terminal(parent)
+        
+        
 class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
