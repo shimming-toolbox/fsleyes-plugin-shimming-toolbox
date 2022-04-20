@@ -397,9 +397,9 @@ class RunComponent(Component):
 
     def add_button_run(self):
         """Add the run button which will call the ``Shimming Toolbox`` CLI."""
-        button_run = wx.Button(self.panel, -1, label="", size=(48, 48))
+        button_run = wx.Button(self.panel, -1, label="Run", size=(85, 48))
         button_run.Bind(wx.EVT_BUTTON, self.button_run_on_click)
-        button_run.SetBitmap(play_icon, dir=wx.TOP)
+        button_run.SetBitmap(play_icon, dir=wx.LEFT)
         self.sizer.Add(button_run, 0, wx.CENTRE)
         self.sizer.AddSpacer(10)
 
