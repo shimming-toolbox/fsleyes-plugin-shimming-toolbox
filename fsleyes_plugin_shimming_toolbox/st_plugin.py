@@ -25,25 +25,24 @@ import logging
 import nibabel as nib
 import numpy as np
 import os
+from pathlib import Path
 import tempfile
 import webbrowser
 import wx
 
-from pathlib import Path
-from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
+from fsleyes_plugin_shimming_toolbox.events import EVT_RESULT, EVT_LOG, LogEvent, ResultEvent
+from fsleyes_plugin_shimming_toolbox.worker_thread import WorkerThread 
 from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli
 from shimmingtoolbox.cli.b1shim import b1shim_cli
 from shimmingtoolbox.cli.dicom_to_nifti import dicom_to_nifti_cli
 from shimmingtoolbox.cli.mask import box, rect, threshold
 from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
 
-
 logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
 ST_DIR = f"{HOME_DIR}/shimming-toolbox"
-
 DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
@@ -453,6 +452,10 @@ class RunComponent(Component):
         self.add_button_run()
         self.output_paths_original = output_paths
         self.output_paths = output_paths.copy()
+        self.worker = None
+
+        EVT_LOG(self, self.log)
+        EVT_RESULT(self, self.on_result)
 
     def create_sizer(self):
         """Create the centre sizer containing tab-specific functionality."""
@@ -470,19 +473,12 @@ class RunComponent(Component):
         self.sizer.Add(button_run, 0, wx.CENTRE)
         self.sizer.AddSpacer(10)
 
-    def button_run_on_click(self, event):
-        """Function called when the ``Run`` button is clicked.
+    def log(self, event):
+        msg = event.data
+        self.panel.terminal_component.log_to_terminal(msg)
 
-        1. Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``)
-        2. Logs the output to the terminal in the GUI.
-        3. Sends the output files to the overlay list if applicable.
-
-        """
-        try:
-            command, msg = self.get_run_args(self.st_function)
-            self.panel.terminal_component.log_to_terminal(msg, level="INFO")
-            output_log = run_subprocess(command)
-            self.panel.terminal_component.log_to_terminal(output_log)
+    def on_result(self, event):
+        if event.data == 0:
             msg = f"Run {self.st_function} completed successfully"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
 
@@ -514,7 +510,15 @@ class RunComponent(Component):
                         "Could not fetch subject and/or path to load to overlay"
                     )
             self.send_output_to_overlay()
-        except Exception as err:
+
+            self.output_paths.clear()
+            self.output_paths = self.output_paths_original.copy()
+            
+        elif type(event.data) == Exception:
+            msg = f"Run {self.st_function} errored out"
+            err = event.data
+            
+            self.panel.terminal_component.log_to_terminal(msg, level="ERROR")
             if len(err.args) == 1:
                 # Pretty output
                 a_string = ""
@@ -524,9 +528,25 @@ class RunComponent(Component):
 
             else:
                 self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
+        
+        else:
+            # The error message should already be displayed
+            pass
+            
+        self.worker = None
 
-        self.output_paths.clear()
-        self.output_paths = self.output_paths_original.copy()
+    def button_run_on_click(self, event):
+        """Function called when the ``Run`` button is clicked.
+
+        1. Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``)
+        2. Logs the output to the terminal in the GUI.
+        3. Sends the output files to the overlay list if applicable.
+
+        """
+        if not self.worker:
+            command, msg = self.get_run_args(self.st_function)
+            self.panel.terminal_component.log_to_terminal(msg, level="INFO")
+            self.worker = WorkerThread(self.panel, command)
 
     def send_output_to_overlay(self):
         for output_path in self.output_paths:
