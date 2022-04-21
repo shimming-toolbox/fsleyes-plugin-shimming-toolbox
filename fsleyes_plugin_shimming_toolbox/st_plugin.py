@@ -474,6 +474,7 @@ class RunComponent(Component):
         self.sizer.AddSpacer(10)
 
     def log(self, event):
+        """Log to the terminal the when there is a log event"""
         msg = event.data
         self.panel.terminal_component.log_to_terminal(msg)
 
@@ -538,9 +539,7 @@ class RunComponent(Component):
     def button_run_on_click(self, event):
         """Function called when the ``Run`` button is clicked.
 
-        1. Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``)
-        2. Logs the output to the terminal in the GUI.
-        3. Sends the output files to the overlay list if applicable.
+        Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``) in a thread
 
         """
         if not self.worker:
