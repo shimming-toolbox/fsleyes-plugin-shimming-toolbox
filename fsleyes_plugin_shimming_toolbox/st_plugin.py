@@ -30,7 +30,8 @@ import tempfile
 import webbrowser
 import wx
 
-from fsleyes_plugin_shimming_toolbox.events import EVT_RESULT, EVT_LOG, LogEvent, ResultEvent
+from fsleyes_plugin_shimming_toolbox.events import result_event_type, EVT_RESULT, ResultEvent
+from fsleyes_plugin_shimming_toolbox.events import log_event_type, EVT_LOG, LogEvent
 from fsleyes_plugin_shimming_toolbox.worker_thread import WorkerThread 
 from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli
 from shimmingtoolbox.cli.b1shim import b1shim_cli
@@ -450,12 +451,13 @@ class RunComponent(Component):
         self.st_function = st_function
         self.sizer = self.create_sizer()
         self.add_button_run()
+        self.output = ""
         self.output_paths_original = output_paths
         self.output_paths = output_paths.copy()
         self.worker = None
 
-        EVT_LOG(self, self.log)
-        EVT_RESULT(self, self.on_result)
+        self.panel.Bind(EVT_RESULT, self.on_result)
+        self.panel.Bind(EVT_LOG, self.log)
 
     def create_sizer(self):
         """Create the centre sizer containing tab-specific functionality."""
@@ -475,12 +477,25 @@ class RunComponent(Component):
 
     def log(self, event):
         """Log to the terminal the when there is a log event"""
-        msg = event.data
-        self.panel.terminal_component.log_to_terminal(msg)
+
+        # Since the log events get broadcated to all the RunComponents of the Tab, we check that the event name 
+        # corresponds to our function i.e self.st_function 
+        if event.name == self.st_function:
+            msg = event.get_data()
+            self.panel.terminal_component.log_to_terminal(msg)
+        else:
+            event.Skip()
 
     def on_result(self, event):
-        if event.data == 0:
-            msg = f"Run {self.st_function} completed successfully"
+        # Since the log events get broadcated to all the RunComponents of the Tab, we check that the event name 
+        # corresponds to our function i.e self.st_function 
+        if event.name != self.st_function:
+            event.Skip()
+            return
+            
+        data = event.get_data()
+        if data == 0:
+            msg = f"Run {self.st_function} completed successfully\n"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
 
             # Get the directory of the output if it is a file or already a directory
@@ -515,9 +530,9 @@ class RunComponent(Component):
             self.output_paths.clear()
             self.output_paths = self.output_paths_original.copy()
             
-        elif type(event.data) == Exception:
-            msg = f"Run {self.st_function} errored out"
-            err = event.data
+        elif type(data) == Exception:
+            msg = f"Run {self.st_function} errored out\n"
+            err = data
             
             self.panel.terminal_component.log_to_terminal(msg, level="ERROR")
             if len(err.args) == 1:
@@ -532,9 +547,10 @@ class RunComponent(Component):
         
         else:
             # The error message should already be displayed
-            pass
+            self.panel.terminal_component.log_to_terminal("")
             
         self.worker = None
+        event.Skip()
 
     def button_run_on_click(self, event):
         """Function called when the ``Run`` button is clicked.
@@ -545,7 +561,7 @@ class RunComponent(Component):
         if not self.worker:
             command, msg = self.get_run_args(self.st_function)
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
-            self.worker = WorkerThread(self.panel, command)
+            self.worker = WorkerThread(self.panel, command, name=self.st_function)
 
     def send_output_to_overlay(self):
         for output_path in self.output_paths:

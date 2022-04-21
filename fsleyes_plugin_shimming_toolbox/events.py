@@ -3,29 +3,34 @@
 
 import wx
 
-EVT_LOG_ID = wx.NewId()
-EVT_RESULT_ID = wx.NewId()
+result_event_type = wx.NewEventType()
+EVT_RESULT = wx.PyEventBinder(result_event_type, 1)
+
+log_event_type = wx.NewEventType()
+EVT_LOG = wx.PyEventBinder(log_event_type, 1)
 
 
-def EVT_RESULT(win, func):
-    """Define Result Event."""
-    win.panel.Connect(-1, -1, EVT_RESULT_ID, func)
+class ResultEvent(wx.PyCommandEvent):
+    def __init__(self, evtType, id, name):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        self.data = ""
+        self.name = name
 
-
-class ResultEvent(wx.PyEvent):
-    def __init__(self, data):
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_RESULT_ID)
+    def set_data(self, data):
         self.data = data
 
-
-def EVT_LOG(win, func):
-    """Define Result Event."""
-    win.panel.Connect(-1, -1, EVT_LOG_ID, func)
+    def get_data(self):
+        return self.data
 
 
-class LogEvent(wx.PyEvent):
-    def __init__(self, data):
-        wx.PyEvent.__init__(self)
-        self.SetEventType(EVT_LOG_ID)
+class LogEvent(wx.PyCommandEvent):
+    def __init__(self, evtType, id, name):
+        wx.PyCommandEvent.__init__(self, evtType, id)
+        self.data = ""
+        self.name = name
+
+    def set_data(self, data):
         self.data = data
+
+    def get_data(self):
+        return self.data
