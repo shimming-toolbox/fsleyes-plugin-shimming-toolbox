@@ -706,7 +706,7 @@ class B0ShimTab(Tab):
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{dynamic_cli.params[10].help}"
+                "info_text": f"{dynamic_cli.params[11].help}"
             }
         ]
         component_output = InputComponent(self, output_metadata)
@@ -758,7 +758,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_ovf_metadata,
             name="Output Value Format",
-            info_text=f"{dynamic_cli.params[13].help}"
+            info_text=f"{dynamic_cli.params[14].help}"
         )
 
         dropdown_opt_metadata = [
@@ -808,7 +808,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
-            info_text="Defines the slice ordering.",
+            info_text=dynamic_cli.params[6].help,
             list_components=[self.create_empty_component(),
                              component_slice_seq,
                              component_slice_int,
@@ -842,7 +842,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_coil_format_metadata,
             name="Custom Coil Output Format",
-            info_text=f"{dynamic_cli.params[11].help}"
+            info_text=f"{dynamic_cli.params[12].help}"
         )
 
         dropdown_scanner_format_metadata = [
@@ -877,14 +877,39 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
             name="Scanner Output Format",
-            info_text=f"{dynamic_cli.params[12].help}"
+            info_text=f"{dynamic_cli.params[13].help}"
         )
+        
+        dropdown_fatsat_metadata = [
+            {
+                "label": "Auto detect",
+                "option_name": "fatsat",
+                "option_value": "auto"
+            },
+            {
+                "label": "Yes",
+                "option_name": "fatsat",
+                "option_value": "yes"
+            },
+            {
+                "label": "No",
+                "option_name": "fatsat",
+                "option_value": "no"
+            },
+        ]
 
+        dropdown_fatsat = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_fatsat_metadata,
+            name="Fat Saturation",
+            info_text=dynamic_cli.params[10].help,
+        )
+        
         run_component = RunComponent(
             panel=self,
             list_components=[self.component_coils_dyn, component_inputs, dropdown_opt, self.dropdown_slice_dyn,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format, dropdown_coil_format,
-                             dropdown_ovf, component_output],
+                             dropdown_ovf, dropdown_fatsat, component_output],
             st_function="st_b0shim dynamic",
             output_paths=["fieldmap_calculated_shim_masked.nii.gz",
                           "fieldmap_calculated_shim.nii.gz"]
@@ -978,7 +1003,7 @@ class B0ShimTab(Tab):
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{realtime_cli.params[12].help}"
+                "info_text": f"{realtime_cli.params[13].help}"
             }
         ]
         component_output = InputComponent(self, output_metadata)
@@ -1030,7 +1055,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_ovf_metadata,
             name="Output Value Format",
-            info_text=f"{realtime_cli.params[15].help}"
+            info_text=f"{realtime_cli.params[16].help}"
         )
 
         dropdown_opt_metadata = [
@@ -1080,7 +1105,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             name="Slice Ordering",
-            info_text="Defines the slice ordering.",
+            info_text=realtime_cli.params[10].help,
             list_components=[self.create_empty_component(),
                              component_slice_seq,
                              component_slice_int,
@@ -1104,7 +1129,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_coil_format_metadata,
             name="Custom Coil Output Format",
-            info_text=f"{realtime_cli.params[13].help}"
+            info_text=f"{realtime_cli.params[14].help}"
         )
 
         dropdown_scanner_format_metadata = [
@@ -1129,14 +1154,39 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
             name="Scanner Output Format",
-            info_text=f"{realtime_cli.params[14].help}"
+            info_text=f"{realtime_cli.params[15].help}"
         )
+        
+        dropdown_fatsat_metadata = [
+            {
+                "label": "Auto detect",
+                "option_name": "fatsat",
+                "option_value": "auto"
+            },
+            {
+                "label": "Yes",
+                "option_name": "fatsat",
+                "option_value": "yes"
+            },
+            {
+                "label": "No",
+                "option_name": "fatsat",
+                "option_value": "no"
+            },
+        ]
 
+        dropdown_fatsat = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_fatsat_metadata,
+            name="Fat Saturation",
+            info_text=realtime_cli.params[12].help,
+        )
+        
         run_component = RunComponent(
             panel=self,
             list_components=[self.component_coils_rt, component_inputs, dropdown_opt, self.dropdown_slice_rt,
                              dropdown_scanner_order, component_scanner, dropdown_scanner_format,
-                             dropdown_coil_format, dropdown_ovf, component_output],
+                             dropdown_coil_format, dropdown_ovf, dropdown_fatsat, component_output],
             st_function="st_b0shim realtime-dynamic",
             # TODO: output paths
             output_paths=[]
