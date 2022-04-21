@@ -2003,7 +2003,7 @@ def select_from_overlay(event, tab, ctrl, focus=False):
     # This is messy and wont work if we change any class hierarchy.. using GetTopLevelParent() only
     # works if the pane is not floating
     # Get the displayCtx class initialized in STControlPanel
-    window = tab.GetGrandParent().GetParent()
+    window = tab.GetGrandParent()
     selected_overlay = window.displayCtx.getSelectedOverlay()
     if selected_overlay is not None:
         filename_path = selected_overlay.dataSource
