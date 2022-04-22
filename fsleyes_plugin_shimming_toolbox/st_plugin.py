@@ -130,7 +130,14 @@ class Tab(wx.ScrolledWindow):
         sizer.AddSpacer(20)
         sizer.Add(self.sizer_run, 2)
         return sizer
-
+    
+    def create_sizer_run(self):
+        """Create the run sizer containing tab-specific functionality."""
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.SetMinSize(400, 300)
+        sizer.AddSpacer(10)
+        return sizer
+    
     def create_empty_component(self):
         component = InputComponent(panel=self, input_text_box_metadata=[])
         return component
@@ -349,7 +356,9 @@ class DropdownComponent(Component):
         # Add the dropdown to the list of options
         self.input_text_boxes[self.dropdown_metadata[index]["option_name"]] = \
             [self.dropdown_metadata[index]["option_value"]]
+        
         # Update the window
+        self.panel.SetVirtualSize(self.panel.sizer_run.GetMinSize())
         self.panel.Layout()
 
     def find_index(self, label):
@@ -492,7 +501,12 @@ class RunComponent(Component):
 
         """
         if not self.worker:
-            command, msg = self.get_run_args(self.st_function)
+            try:
+                command, msg = self.get_run_args(self.st_function)
+            except RunArgumentErrorST as err:
+                self.panel.terminal_component.log_to_terminal(err, level="ERROR")
+                return
+            
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
             self.worker = WorkerThread(self.panel, command, name=self.st_function)
 
@@ -540,7 +554,7 @@ class RunComponent(Component):
                             arg = textctrl.GetValue()
                             if arg == "" or arg is None:
                                 if input_text_box.required is True:
-                                    raise self.RunArgumentErrorST(
+                                    raise RunArgumentErrorST(
                                         f"Argument {name} is missing a value, please enter a valid input"
                                     )
                             else:
@@ -571,10 +585,6 @@ class RunComponent(Component):
         msg += command
         msg += "\n"
         return command, msg
-
-    class RunArgumentErrorST(Exception):
-        """Exception for missing input arguments for CLI call."""
-        pass
 
     def fetch_paths_dicom_to_nifti(self):
         if self.st_function == "st_dicom_to_nifti":
@@ -656,6 +666,7 @@ class B0ShimTab(Tab):
             pass
 
         # Update the window
+        self.SetVirtualSize(self.sizer_run.GetMinSize())
         self.Layout()
 
     def unshow_choice_box_sizers(self):
@@ -1244,13 +1255,6 @@ class B0ShimTab(Tab):
         sizer = run_component.sizer
         return sizer
 
-    def create_sizer_run(self):
-        """Create the centre sizer containing tab-specific functionality."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.SetMinSize(400, 300)
-        sizer.AddSpacer(10)
-        return sizer
-
 
 class B1ShimTab(Tab):
     def __init__(self, parent, title=r"B1+ Shim"):
@@ -1309,6 +1313,7 @@ class B1ShimTab(Tab):
             pass
 
         # Update the window
+        self.SetVirtualSize(self.sizer_run.GetMinSize())
         self.Layout()
 
     def unshow_choice_box_sizers(self):
@@ -1506,13 +1511,6 @@ class B1ShimTab(Tab):
         sizer = run_component.sizer
         return sizer
 
-    def create_sizer_run(self):
-        """Create the centre sizer containing tab-specific functionality."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.SetMinSize(400, 300)
-        sizer.AddSpacer(10)
-        return sizer
-
 
 class FieldMapTab(Tab):
     def __init__(self, parent, title="Fieldmap"):
@@ -1520,7 +1518,17 @@ class FieldMapTab(Tab):
                       "Enter the Number of Echoes then press the `Number of Echoes` button.\n\n" \
                       "Select the unwrapper from the dropdown list."
         super().__init__(parent, title, description)
+        
+        self.sizer_run = self.create_sizer_run()
         self.n_echoes = 0
+        sizer = self.create_fieldmap_sizer()
+        self.sizer_run.Add(sizer, 0, wx.EXPAND)
+        
+        self.parent_sizer = self.create_sizer()
+        self.SetSizer(self.parent_sizer)
+        
+    def create_fieldmap_sizer(self):
+        
         input_text_box_metadata_input = [
             {
                 "button_label": "Number of Echoes",
@@ -1632,9 +1640,8 @@ class FieldMapTab(Tab):
                              self.component_output],
             st_function="st_prepare_fieldmap"
         )
-        self.sizer_run = self.run_component.sizer
-        sizer = self.create_sizer()
-        self.SetSizer(sizer)
+        
+        return self.run_component.sizer
 
 
 class MaskTab(Tab):
@@ -1688,8 +1695,8 @@ class MaskTab(Tab):
             pass
 
         # Update the window
+        self.SetVirtualSize(self.sizer_run.GetMinSize())
         self.Layout()
-        self.GetParent().Layout()
 
     def unshow_choice_box_sizers(self):
         """Set the Show variable to false for all sizers of the choice box widget"""
@@ -1816,18 +1823,20 @@ class MaskTab(Tab):
         sizer = run_component.sizer
         return sizer
 
-    def create_sizer_run(self):
-        """Create the centre sizer containing tab-specific functionality."""
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.SetMinSize(400, 300)
-        sizer.AddSpacer(10)
-        return sizer
-
 
 class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Convert DICOM files into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
+        
+        self.sizer_run = self.create_sizer_run()
+        sizer = self.create_dicom_to_nifti_sizer()
+        self.sizer_run.Add(sizer, 0, wx.EXPAND)
+        
+        self.parent_sizer = self.create_sizer()
+        self.SetSizer(self.parent_sizer)
+        
+    def create_dicom_to_nifti_sizer(self):
         path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
             {
@@ -1860,9 +1869,7 @@ class DicomToNiftiTab(Tab):
         ]
         component = InputComponent(self, input_text_box_metadata)
         run_component = RunComponent(panel=self, list_components=[component], st_function="st_dicom_to_nifti")
-        self.sizer_run = run_component.sizer
-        sizer = self.create_sizer()
-        self.SetSizer(sizer)
+        return run_component.sizer
 
 
 class TextWithButton:
@@ -2298,3 +2305,8 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
+
+
+class RunArgumentErrorST(Exception):
+    """Exception for missing input arguments for CLI call."""
+    pass
