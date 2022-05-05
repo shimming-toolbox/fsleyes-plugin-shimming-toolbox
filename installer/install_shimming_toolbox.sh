@@ -14,7 +14,7 @@ rm -rf "${ST_DIR}/shimming-toolbox"
 
 print info "Downloading Shimming-Toolbox"
 
-ST_VERSION=d21d5024206225299a8d4b737a646d88fddafe59
+ST_VERSION=7b462588d7012ea296de493e063a3f5fcd14a804
 
 curl -L "https://github.com/shimming-toolbox/shimming-toolbox/archive/${ST_VERSION}.zip" > "shimming-toolbox-${ST_VERSION}.zip"
 

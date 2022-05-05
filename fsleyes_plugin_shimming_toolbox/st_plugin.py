@@ -490,7 +490,7 @@ class RunComponent(Component):
 
         else:
             # The error message should already be displayed
-            self.panel.terminal_component.log_to_terminal("", level="ERROR")
+            self.panel.terminal_component.log_to_terminal(str(data), level="ERROR")
 
         self.worker = None
         event.Skip()
@@ -532,7 +532,7 @@ class RunComponent(Component):
     def get_run_args(self, st_function):
         """The option are a list of tuples where the tuple: (name, [value1, value2])"""
         msg = "Running "
-        command = st_function
+        command = [st_function]
 
         self.output = ""
         command_list_arguments = []
@@ -576,15 +576,16 @@ class RunComponent(Component):
 
         # Arguments don't need "-"
         for arg in command_list_arguments:
-            command += f" '{arg}'"
+            command += [arg]
 
         # Handles options
         for name, args in command_list_options:
-            command += f" --{name}"
+            command += ['--' + name]
             for arg in args:
-                command += f" '{arg}'"
-        msg += command
-        msg += "\n"
+                command += [arg]
+                
+        msg += ' '.join(command) + '\n'
+        
         return command, msg
 
     def fetch_paths_dicom_to_nifti(self):
