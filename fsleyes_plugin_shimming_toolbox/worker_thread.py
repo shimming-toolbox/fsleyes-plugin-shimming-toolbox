@@ -6,6 +6,7 @@ from pathlib import Path
 import subprocess
 from threading import Thread
 import wx
+import shlex
 
 from fsleyes_plugin_shimming_toolbox.events import result_event_type, EVT_RESULT, ResultEvent
 from fsleyes_plugin_shimming_toolbox.events import log_event_type, EVT_LOG, LogEvent
@@ -29,9 +30,10 @@ class WorkerThread(Thread):
             # It seems to default to the Python executalble instead of the Shebang, removing it fixes it
             env["PYTHONEXECUTABLE"] = ""
             env["PATH"] = PATH_ST_VENV + ":" + env["PATH"]
-            
+
+            cmd_split = shlex.split(self.cmd)
             # Run command using realtime output
-            process = subprocess.Popen(self.cmd.split(' '),
+            process = subprocess.Popen(cmd_split,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.STDOUT,
                                        text=True,

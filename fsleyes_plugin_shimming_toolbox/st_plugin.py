@@ -436,6 +436,7 @@ class RunComponent(Component):
             return
 
         data = event.get_data()
+        # Return code is 0 if everything ran smoothly
         if data == 0:
             msg = f"Run {self.st_function} completed successfully\n"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
@@ -489,7 +490,7 @@ class RunComponent(Component):
 
         else:
             # The error message should already be displayed
-            self.panel.terminal_component.log_to_terminal("")
+            self.panel.terminal_component.log_to_terminal("", level="ERROR")
 
         self.worker = None
         event.Skip()
@@ -581,7 +582,7 @@ class RunComponent(Component):
         for name, args in command_list_options:
             command += f" --{name}"
             for arg in args:
-                command += f" {arg}"
+                command += f" '{arg}'"
         msg += command
         msg += "\n"
         return command, msg
