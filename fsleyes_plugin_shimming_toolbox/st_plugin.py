@@ -576,7 +576,7 @@ class RunComponent(Component):
 
         # Arguments don't need "-"
         for arg in command_list_arguments:
-            command += f" {arg}"
+            command += f" '{arg}'"
 
         # Handles options
         for name, args in command_list_options:
