@@ -532,7 +532,8 @@ class RunComponent(Component):
     def get_run_args(self, st_function):
         """The option are a list of tuples where the tuple: (name, [value1, value2])"""
         msg = "Running "
-        command = [st_function]
+        # Split is necessary if we have grouped commands (st_mask threshold)
+        command = st_function.split(' ')
 
         self.output = ""
         command_list_arguments = []
