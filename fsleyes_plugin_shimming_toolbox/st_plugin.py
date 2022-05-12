@@ -516,7 +516,7 @@ class RunComponent(Component):
             if os.path.isfile(output_path):
                 try:
                     # Display the overlay
-                    window = self.panel.GetGrandParent().GetParent()
+                    window = self.panel.GetGrandParent()
                     if output_path[-4:] == ".png":
                         load_png_image_from_path(window, output_path, colormap="greyscale")
                     elif output_path[-7:] == ".nii.gz" or output_path[-4:] == ".nii":
