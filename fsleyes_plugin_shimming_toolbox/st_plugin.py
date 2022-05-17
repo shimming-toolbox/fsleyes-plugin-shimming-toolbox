@@ -251,7 +251,8 @@ class InputComponent(Component):
                 n_text_boxes=twb_dict.get("n_text_boxes", 1),
                 name=twb_dict.get("name", "default"),
                 info_text=twb_dict.get("info_text", ""),
-                required=twb_dict.get("required", False)
+                required=twb_dict.get("required", False),
+                load_in_overlay=twb_dict.get("load_in_overlay", False)
             )
             self.add_input_text_box(text_with_button, twb_dict.get("name", "default"))
 
@@ -395,6 +396,7 @@ class RunComponent(Component):
         self.output = ""
         self.output_paths_original = output_paths
         self.output_paths = output_paths.copy()
+        self.load_in_overlay = []
         self.worker = None
 
         self.panel.Bind(EVT_RESULT, self.on_result)
@@ -454,6 +456,10 @@ class RunComponent(Component):
             # Append the file if it was a file
             if os.path.isfile(self.output):
                 self.output_paths.append(self.output)
+            
+            # Append files that are a direct output from "load_in_overlay"
+            for fname in self.load_in_overlay:
+                self.output_paths.append(fname)
 
             if self.st_function == "st_dicom_to_nifti":
                 # If its dicom_to_nifti, output all .nii found in the subject folder to the overlay
@@ -568,7 +574,9 @@ class RunComponent(Component):
                                 else:
                                     if name == "output":
                                         self.output = arg
-
+                                    elif input_text_box.load_in_overlay:
+                                        self.load_in_overlay.append(arg)
+                                        
                                     option_values.append(arg)
 
                         # If its an argument don't include it as an option, if the option list is empty don't either
@@ -1594,6 +1602,12 @@ class FieldMapTab(Tab):
                 "button_label": "Threshold",
                 "name": "threshold",
                 "info_text": f"{prepare_fieldmap_cli.params[6].help}"
+            },
+            {
+                "button_label": "Output Calculated Mask",
+                "name": "savemask",
+                "info_text": f"{prepare_fieldmap_cli.params[7].help}",
+                "load_in_overlay": True
             }
         ]
 
@@ -1902,7 +1916,7 @@ class TextWithButton:
     """
 
     def __init__(self, panel, button_label, button_function, name="default", default_text="",
-                 n_text_boxes=1, info_text="", required=False):
+                 n_text_boxes=1, info_text="", required=False, load_in_overlay=False):
         self.panel = panel
         self.button_label = button_label
         if type(button_function) is not list:
@@ -1914,6 +1928,7 @@ class TextWithButton:
         self.name = name
         self.info_text = info_text
         self.required = required
+        self.load_in_overlay = load_in_overlay
 
     def create(self):
         text_with_button_box = wx.BoxSizer(wx.HORIZONTAL)
