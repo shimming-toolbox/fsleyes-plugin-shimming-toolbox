@@ -499,6 +499,7 @@ class RunComponent(Component):
             self.panel.terminal_component.log_to_terminal(str(data), level="ERROR")
 
         self.worker = None
+        self.load_in_overlay = []
         event.Skip()
 
     def button_run_on_click(self, event):
