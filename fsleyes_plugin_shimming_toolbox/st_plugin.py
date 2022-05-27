@@ -13,7 +13,7 @@ This is an FSLeyes plugin that integrates the following ``shimmingtoolbox`` tool
 
 ---------------------------------------------------------------------------------------
 Copyright (c) 2021 Polytechnique Montreal <www.neuro.polymtl.ca>
-Authors: Alexandre D'Astous, Ainsleigh Hill, Gaspard Cereza, Julien Cohen-Adad
+Authors: Alexandre D'Astous, Ainsleigh Hill, Gaspard Cereza, Arnaud Bréhéret, Julien Cohen-Adad
 """
 
 import abc
@@ -26,24 +26,24 @@ import logging
 import nibabel as nib
 import numpy as np
 import os
+from pathlib import Path
 import webbrowser
 import wx
 
-from pathlib import Path
-from fsleyes_plugin_shimming_toolbox.utils import run_subprocess
+from fsleyes_plugin_shimming_toolbox.events import result_event_type, EVT_RESULT, ResultEvent
+from fsleyes_plugin_shimming_toolbox.events import log_event_type, EVT_LOG, LogEvent
+from fsleyes_plugin_shimming_toolbox.worker_thread import WorkerThread
 from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli
 from shimmingtoolbox.cli.b1shim import b1shim_cli
 from shimmingtoolbox.cli.dicom_to_nifti import dicom_to_nifti_cli
 from shimmingtoolbox.cli.mask import box, rect, threshold
 from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
 
-
 logger = logging.getLogger(__name__)
 
 HOME_DIR = str(Path.home())
 CURR_DIR = os.getcwd()
 ST_DIR = f"{HOME_DIR}/shimming-toolbox"
-
 DIR = os.path.dirname(__file__)
 
 VERSION = "0.1.1"
@@ -106,18 +106,19 @@ class STControlPanel(ctrlpanel.ControlPanel):
 
 class NotebookTerminal(wx.Notebook):
     """Notebook class with an extra terminal attribute"""
+
     def __init__(self, parent):
         super().__init__(parent)
         self.terminal_component = Terminal(parent)
-        
-        
+
+
 class Tab(wx.ScrolledWindow):
     def __init__(self, parent, title, description):
         super().__init__(parent)
         self.title = title
         self.sizer_info = InfoSection(self, description).sizer
         self.terminal_component = parent.terminal_component
-        self.SetScrollbars(1, 1, 1, 1)
+        self.SetScrollbars(1, 4, 1, 1)
 
     def create_sizer(self):
         """Create the parent sizer for the tab.
@@ -138,6 +139,7 @@ class Tab(wx.ScrolledWindow):
 
 class Terminal:
     """Create the terminal where messages are logged to the user."""
+
     def __init__(self, panel):
         self.panel = panel
         self.terminal = wx.TextCtrl(self.panel, wx.ID_ANY, style=wx.TE_MULTILINE | wx.TE_READONLY)
@@ -383,8 +385,13 @@ class RunComponent(Component):
         self.st_function = st_function
         self.sizer = self.create_sizer()
         self.add_button_run()
+        self.output = ""
         self.output_paths_original = output_paths
         self.output_paths = output_paths.copy()
+        self.worker = None
+
+        self.panel.Bind(EVT_RESULT, self.on_result)
+        self.panel.Bind(EVT_LOG, self.log)
 
     def create_sizer(self):
         """Create the centre sizer containing tab-specific functionality."""
@@ -403,20 +410,27 @@ class RunComponent(Component):
         self.sizer.Add(button_run, 0, wx.CENTRE)
         self.sizer.AddSpacer(10)
 
-    def button_run_on_click(self, event):
-        """Function called when the ``Run`` button is clicked.
+    def log(self, event):
+        """Log to the terminal the when there is a log event"""
 
-        1. Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``)
-        2. Logs the output to the terminal in the GUI.
-        3. Sends the output files to the overlay list if applicable.
+        # Since the log events get broadcated to all the RunComponents of the Tab, we check that the event name
+        # corresponds to our function i.e self.st_function
+        if event.name == self.st_function:
+            msg = event.get_data()
+            self.panel.terminal_component.log_to_terminal(msg)
+        else:
+            event.Skip()
 
-        """
-        try:
-            command, msg = self.get_run_args(self.st_function)
-            self.panel.terminal_component.log_to_terminal(msg, level="INFO")
-            output_log = run_subprocess(command)
-            self.panel.terminal_component.log_to_terminal(output_log)
-            msg = f"Run {self.st_function} completed successfully"
+    def on_result(self, event):
+        # Since the log events get broadcated to all the RunComponents of the Tab, we check that the event name
+        # corresponds to our function i.e self.st_function
+        if event.name != self.st_function:
+            event.Skip()
+            return
+
+        data = event.get_data()
+        if data == 0:
+            msg = f"Run {self.st_function} completed successfully\n"
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
 
             # Get the directory of the output if it is a file or already a directory
@@ -447,7 +461,15 @@ class RunComponent(Component):
                         "Could not fetch subject and/or path to load to overlay"
                     )
             self.send_output_to_overlay()
-        except Exception as err:
+
+            self.output_paths.clear()
+            self.output_paths = self.output_paths_original.copy()
+
+        elif type(data) == Exception:
+            msg = f"Run {self.st_function} errored out\n"
+            err = data
+
+            self.panel.terminal_component.log_to_terminal(msg, level="ERROR")
             if len(err.args) == 1:
                 # Pretty output
                 a_string = ""
@@ -458,8 +480,23 @@ class RunComponent(Component):
             else:
                 self.panel.terminal_component.log_to_terminal(str(err), level="ERROR")
 
-        self.output_paths.clear()
-        self.output_paths = self.output_paths_original.copy()
+        else:
+            # The error message should already be displayed
+            self.panel.terminal_component.log_to_terminal("")
+
+        self.worker = None
+        event.Skip()
+
+    def button_run_on_click(self, event):
+        """Function called when the ``Run`` button is clicked.
+
+        Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``) in a thread
+
+        """
+        if not self.worker:
+            command, msg = self.get_run_args(self.st_function)
+            self.panel.terminal_component.log_to_terminal(msg, level="INFO")
+            self.worker = WorkerThread(self.panel, command, name=self.st_function)
 
     def send_output_to_overlay(self):
         for output_path in self.output_paths:
@@ -1639,6 +1676,7 @@ class MaskTab(Tab):
             },
             {
                 "button_label": "Center",
+                "button_function": "add_current_position",
                 "name": "center",
                 "n_text_boxes": 2,
                 "info_text": f"{rect.params[3].help}"
@@ -1679,6 +1717,7 @@ class MaskTab(Tab):
             },
             {
                 "button_label": "Center",
+                "button_function": "add_current_position",
                 "name": "center",
                 "n_text_boxes": 3,
                 "info_text": f"{box.params[3].help}"
@@ -1832,6 +1871,10 @@ class TextWithButton:
                 function = lambda event, panel=self.panel, ctrl=self.textctrl_list[i], index=2: \
                     add_input_coil_boxes(event, panel, ctrl, index)
                 self.textctrl_list[i].Bind(wx.EVT_TEXT, function)
+            elif button_function == "add_current_position":
+                function = lambda event, panel=self.panel, ctrl=self.textctrl_list: \
+                    add_current_position(event, panel, ctrl)
+                button.Bind(wx.EVT_BUTTON, function)
 
         text_with_button_box.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
 
@@ -1921,7 +1964,6 @@ def select_from_overlay(event, tab, ctrl, focus=False):
         focus (bool): Tells whether the ctrl must be in focus.
     """
     if focus:
-        # Skip allows to handle other events
         focused = wx.Window.FindFocus()
         if ctrl != focused:
             if focused == tab:
@@ -1931,6 +1973,7 @@ def select_from_overlay(event, tab, ctrl, focus=False):
                 )
                 # If its the tab, don't handle the other events so that the log message is only once
                 return
+            # Skip allows to handle other events,
             event.Skip()
             return
 
@@ -2182,3 +2225,45 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
         opts.cmap = colormap
 
     return img_overlay
+
+
+def add_current_position(event, tab, ctrl):
+    """Insert current crosshair position in center text boxes, defaults to 0 if no position is available
+
+        Args:
+            -event (wx.Event): when the ``Number of Echoes`` button is clicked.
+            -tab (Mask): tab class instance for ``Mask``.
+            -ctrl (wx.TextCtrl): the list if text boxes containing the number of phase boxes to add. Must be an
+                integer > 0.
+
+        Return
+            void
+        """
+
+    # This is messy and won't work if we change any class hierarchy. Using GetTopLevelParent() only
+    # works if the pane is not floating
+    # Get the displayCtx class initialized in STControlPanel
+    window = tab.GetGrandParent().GetParent()
+    selected_overlay = window.displayCtx.getSelectedOverlay()
+
+    # Set position to zero if no image has been imported
+    if selected_overlay is None:
+        tab.terminal_component.log_to_terminal(
+            "No voxel positions available, please import an image",
+            level="INFO"
+        )
+        vox_locations = [0 for _ in range(len(ctrl))]
+
+    # Calculates voxel location from world locations (coordinates)
+    else:
+        wloc = window.displayCtx.worldLocation
+        opt = window.displayCtx.getOpts(selected_overlay)
+        vox_locations = opt.transformCoords(wloc, 'world', 'voxel')
+
+    # Inserts voxel locations in text boxes
+    for text_box, value in zip(ctrl, vox_locations):
+        # np.round is used in combination with int() to make sure the float value is rounded properly
+        text_box.SetValue(str(int(np.round(value))))
+
+    # Skip allows to handle other events
+    event.Skip()
