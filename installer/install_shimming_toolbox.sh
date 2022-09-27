@@ -1,4 +1,4 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 source "$SCRIPT_DIR/utils.sh"
@@ -14,7 +14,7 @@ rm -rf "${ST_DIR}/shimming-toolbox"
 
 print info "Downloading Shimming-Toolbox"
 
-ST_VERSION=bfad338ba97044bfcaae233efae1ce90009a8295
+ST_VERSION=0ab440e903a61c4a86c767a28a90f6ab7bb053ac
 
 curl -L "https://github.com/shimming-toolbox/shimming-toolbox/archive/${ST_VERSION}.zip" > "shimming-toolbox-${ST_VERSION}.zip"
 
@@ -31,10 +31,6 @@ make install CLEAN=false
 
 # Copy coil config file in shimming toolbox directory
 cp "${ST_DIR}/shimming-toolbox/config/coil_config.json" "${ST_DIR}/coil_config.json"
-
-# Install shimming-toolbox in pst_venv to be able to fetch the CLI docstrings for the plugin contextual help
-# Use the quiet flag because the user does not need to see this install (it could be confusing as to why we do it)
-$ST_DIR/python/envs/pst_venv/bin/python -m pip install -e . --quiet
 
 print info "To launch the plugin, load the environment variables then run:"
 print list "shimming-toolbox"
