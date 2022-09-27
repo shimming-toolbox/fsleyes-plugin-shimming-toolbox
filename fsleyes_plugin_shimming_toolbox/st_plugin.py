@@ -130,14 +130,14 @@ class Tab(wx.ScrolledWindow):
         sizer.AddSpacer(20)
         sizer.Add(self.sizer_run, 2)
         return sizer
-    
+
     def create_sizer_run(self):
         """Create the run sizer containing tab-specific functionality."""
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.SetMinSize(400, 300)
         sizer.AddSpacer(10)
         return sizer
-    
+
     def create_empty_component(self):
         component = InputComponent(panel=self, input_text_box_metadata=[])
         return component
@@ -210,17 +210,31 @@ class InfoSection:
 
 
 class InputComponent(Component):
-    def __init__(self, panel, input_text_box_metadata):
+    """ Define cli to automatically generate help text """
+    def __init__(self, panel, input_text_box_metadata, cli=None):
         super().__init__(panel)
         self.sizer = self.create_sizer()
         self.input_text_boxes = {}
         self.input_text_box_metadata = input_text_box_metadata
+        self.cli = cli
+        self.add_text_info()
         self.add_input_text_boxes()
 
     def create_sizer(self):
         """Create the centre sizer containing tab-specific functionality."""
         sizer = wx.BoxSizer(wx.VERTICAL)
         return sizer
+
+    def add_text_info(self):
+        """ This function adds the help text to the metadata. This function
+            needs to be called before creating the buttons.
+
+        """
+        for i, twb_dict in enumerate(self.input_text_box_metadata):
+            if not ('info_text' in twb_dict.keys()) and (self.cli is not None) and ('name' in twb_dict.keys()):
+                description = get_help_text(self.cli, twb_dict['name'])
+                self.input_text_box_metadata[i]['info_text'] = description
+
 
     def add_input_text_boxes(self, spacer_size=10):
         """Add a list of input text boxes (TextWithButton) to the sizer_input.
@@ -283,36 +297,50 @@ class InputComponent(Component):
 
 
 class DropdownComponent(Component):
-    def __init__(self, panel, dropdown_metadata, name, list_components=[], info_text=""):
+    def __init__(self, panel, dropdown_metadata, label, option_name, list_components=[], info_text=None, cli=None):
         """ Create a dropdown list
 
         Args:
             panel (wx.Panel): A panel is a window on which controls are placed.
             dropdown_metadata (list)(dict): A list of dictionaries where the dictionaries have the
-                required keys: ``label``, ``option_name``, ``option_value``.
+                required keys: ``label``, ``option_value``.
                 .. code::
 
                     {
                         "label": The label for the dropdown box
-                        "option_name": The name of the option in the CLI
                         "option_value": The value linked to the option in the CLI
                     }
 
-            name (str): Label of the button describing the dropdown
+            label (str): Label of the button describing the dropdown
+            option_name (str): Name of the options of the dropdown, set to 'no_arg' is not an option
             list_components (list): list of InputComponents
-            info_text (str): Info message displayed when hovering over the "i" icon.
+            info_text (str): Info message displayed when hovering over the "i" icon. Leave blank to auto fill using option_name
+            cli (function): CLI function used by the dropdown
         """
         super().__init__(panel, list_components)
         self.dropdown_metadata = dropdown_metadata
-        self.name = name
+        self.label = label
         self.info_text = info_text
         self.positions = {}
         self.input_text_boxes = {}
         self.sizer = self.create_sizer()
         self.dropdown_choices = [item["label"] for item in self.dropdown_metadata]
+        self.option_name = option_name
+        self.cli = cli
+        self.add_text_info()
         self.create_choice_box()
         self.create_dropdown_sizers()
         self.on_choice(None)
+
+    def add_text_info(self):
+        """ This function adds the help text. """
+
+        if self.info_text is None:
+            if self.cli is not None:
+                description = get_help_text(self.cli, self.option_name)
+                self.info_text = description
+            else:
+                self.info_text = ""
 
     def create_dropdown_sizers(self):
         for index in range(len(self.list_components)):
@@ -329,7 +357,7 @@ class DropdownComponent(Component):
     def create_choice_box(self):
         self.choice_box = wx.Choice(self.panel, choices=self.dropdown_choices)
         self.choice_box.Bind(wx.EVT_CHOICE, self.on_choice)
-        button = wx.Button(self.panel, -1, label=self.name)
+        button = wx.Button(self.panel, -1, label=self.label)
         self.choice_box_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.choice_box_sizer.Add(create_info_icon(self.panel, self.info_text), 0, wx.ALIGN_LEFT | wx.RIGHT, 7)
         self.choice_box_sizer.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
@@ -355,9 +383,8 @@ class DropdownComponent(Component):
             self.input_text_boxes = self.list_components[index].input_text_boxes
 
         # Add the dropdown to the list of options
-        self.input_text_boxes[self.dropdown_metadata[index]["option_name"]] = \
-            [self.dropdown_metadata[index]["option_value"]]
-        
+        self.input_text_boxes[self.option_name] = [self.dropdown_metadata[index]["option_value"]]
+
         # Update the window
         self.panel.SetVirtualSize(self.panel.sizer_run.GetMinSize())
         self.panel.Layout()
@@ -456,7 +483,7 @@ class RunComponent(Component):
             # Append the file if it was a file
             if os.path.isfile(self.output):
                 self.output_paths.append(self.output)
-            
+
             # Append files that are a direct output from "load_in_overlay"
             for fname in self.load_in_overlay:
                 self.output_paths.append(fname)
@@ -514,7 +541,7 @@ class RunComponent(Component):
             except RunArgumentErrorST as err:
                 self.panel.terminal_component.log_to_terminal(err, level="ERROR")
                 return
-            
+
             self.panel.terminal_component.log_to_terminal(msg, level="INFO")
             self.worker = WorkerThread(self.panel, command, name=self.st_function)
 
@@ -547,11 +574,12 @@ class RunComponent(Component):
         command_list_options = []
         for component in self.list_components:
             for name, input_text_box_list in component.input_text_boxes.items():
+
                 if name == "no_arg":
                     continue
 
                 for input_text_box in input_text_box_list:
-                    # Allows to chose from a dropdown
+                    # Allows to choose from a dropdown
                     if type(input_text_box) == str:
                         command_list_options.append((name, [input_text_box]))
 
@@ -577,7 +605,7 @@ class RunComponent(Component):
                                         self.output = arg
                                     elif input_text_box.load_in_overlay:
                                         self.load_in_overlay.append(arg)
-                                        
+
                                     option_values.append(arg)
 
                         # If its an argument don't include it as an option, if the option list is empty don't either
@@ -593,9 +621,9 @@ class RunComponent(Component):
             command += ['--' + name]
             for arg in args:
                 command += [arg]
-                
+
         msg += ' '.join(command) + '\n'
-        
+
         return command, msg
 
     def fetch_paths_dicom_to_nifti(self):
@@ -712,53 +740,47 @@ class B0ShimTab(Tab):
                 "button_label": "Input Fieldmap",
                 "name": "fmap",
                 "button_function": "select_from_overlay",
-                "info_text": f"{dynamic_cli.params[1].help}",
                 "required": True
             },
             {
                 "button_label": "Input Anat",
                 "name": "anat",
                 "button_function": "select_from_overlay",
-                "info_text": f"{dynamic_cli.params[2].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": f"{dynamic_cli.params[3].help}"
             },
             {
                 "button_label": "Mask Dilation Kernel Size",
                 "name": "mask-dilation-kernel-size",
-                "info_text": f"{dynamic_cli.params[9].help}",
                 "default_text": "3",
             }
         ]
 
-        component_inputs = InputComponent(self, input_text_box_metadata_inputs)
+        component_inputs = InputComponent(self, input_text_box_metadata_inputs, cli=dynamic_cli)
 
         input_text_box_metadata_scanner = [
             {
                 "button_label": "Scanner constraints",
                 "button_function": "select_file",
                 "name": "scanner-coil-constraints",
-                "info_text": f"{dynamic_cli.params[5].help}",
                 "default_text": f"{os.path.join(ST_DIR, 'coil_config.json')}",
             },
         ]
-        component_scanner = InputComponent(self, input_text_box_metadata_scanner)
+        component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
 
         input_text_box_metadata_slice = [
             {
                 "button_label": "Slice Factor",
                 "name": "slice-factor",
-                "info_text": f"{dynamic_cli.params[7].help}",
                 "default_text": "1",
             },
         ]
-        component_slice_int = InputComponent(self, input_text_box_metadata_slice)
-        component_slice_seq = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_int = InputComponent(self, input_text_box_metadata_slice, cli=dynamic_cli)
+        component_slice_seq = InputComponent(self, input_text_box_metadata_slice, cli=dynamic_cli)
 
         output_metadata = [
             {
@@ -766,30 +788,25 @@ class B0ShimTab(Tab):
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{dynamic_cli.params[11].help}"
             }
         ]
-        component_output = InputComponent(self, output_metadata)
+        component_output = InputComponent(self, output_metadata, cli=dynamic_cli)
 
         dropdown_scanner_order_metadata = [
             {
                 "label": "-1",
-                "option_name": "scanner-coil-order",
                 "option_value": "-1"
             },
             {
                 "label": "0",
-                "option_name": "scanner-coil-order",
                 "option_value": "0"
             },
             {
                 "label": "1",
-                "option_name": "scanner-coil-order",
                 "option_value": "1"
             },
             {
                 "label": "2",
-                "option_name": "scanner-coil-order",
                 "option_value": "2"
             }
         ]
@@ -797,19 +814,18 @@ class B0ShimTab(Tab):
         dropdown_scanner_order = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_scanner_order_metadata,
-            name="Scanner Order",
-            info_text=f"{dynamic_cli.params[4].help}"
+            label="Scanner Order",
+            option_name = 'scanner-coil-order',
+            cli=dynamic_cli
         )
 
         dropdown_ovf_metadata = [
             {
                 "label": "delta",
-                "option_name": "output-value-format",
                 "option_value": "delta"
             },
             {
                 "label": "absolute",
-                "option_name": "output-value-format",
                 "option_value": "absolute"
             }
         ]
@@ -817,19 +833,18 @@ class B0ShimTab(Tab):
         dropdown_ovf = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_ovf_metadata,
-            name="Output Value Format",
-            info_text=f"{dynamic_cli.params[14].help}"
+            label="Output Value Format",
+            option_name = 'output-value-format',
+            cli=dynamic_cli
         )
 
         dropdown_opt_metadata = [
             {
                 "label": "Least Squares",
-                "option_name": "optimizer-method",
                 "option_value": "least_squares"
             },
             {
                 "label": "Pseudo Inverse",
-                "option_name": "optimizer-method",
                 "option_value": "pseudo_inverse"
             },
         ]
@@ -837,29 +852,26 @@ class B0ShimTab(Tab):
         dropdown_opt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_opt_metadata,
-            name="Optimizer",
-            info_text=f"{dynamic_cli.params[8].help}"
+            label="Optimizer",
+            option_name = 'optimizer-method',
+            cli=dynamic_cli
         )
 
         dropdown_slice_metadata = [
             {
                 "label": "Auto detect",
-                "option_name": "slices",
                 "option_value": "auto"
             },
             {
                 "label": "Sequential",
-                "option_name": "slices",
                 "option_value": "sequential"
             },
             {
                 "label": "Interleaved",
-                "option_name": "slices",
                 "option_value": "interleaved"
             },
             {
                 "label": "Volume",
-                "option_name": "slices",
                 "option_value": "volume"
             },
         ]
@@ -867,8 +879,9 @@ class B0ShimTab(Tab):
         self.dropdown_slice_dyn = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
-            name="Slice Ordering",
-            info_text=dynamic_cli.params[6].help,
+            label="Slice Ordering",
+            cli=dynamic_cli,
+            option_name = 'slices',
             list_components=[self.create_empty_component(),
                              component_slice_seq,
                              component_slice_int,
@@ -878,40 +891,33 @@ class B0ShimTab(Tab):
         dropdown_coil_format_metadata = [
             {
                 "label": "Slicewise per Channel",
-                "option_name": "output-file-format-coil",
                 "option_value": "slicewise-ch"
             },
             {
                 "label": "Slicewise per Coil",
-                "option_name": "output-file-format-coil",
                 "option_value": "slicewise-coil"
             },
             {
                 "label": "Chronological per Channel",
-                "option_name": "output-file-format-coil",
                 "option_value": "chronological-ch"
             },
             {
                 "label": "Chronological per Coil",
-                "option_name": "output-file-format-coil",
                 "option_value": "chronological-coil"
             },
         ]
-        
+
         dropdown_fatsat_metadata = [
             {
                 "label": "Auto detect",
-                "option_name": "fatsat",
                 "option_value": "auto"
             },
             {
                 "label": "Yes",
-                "option_name": "fatsat",
                 "option_value": "yes"
             },
             {
                 "label": "No",
-                "option_name": "fatsat",
                 "option_value": "no"
             },
         ]
@@ -919,22 +925,25 @@ class B0ShimTab(Tab):
         dropdown_fatsat1 = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_fatsat_metadata,
-            name="Fat Saturation",
-            info_text=dynamic_cli.params[10].help,
+            option_name = 'fatsat',
+            label="Fat Saturation",
+            cli=dynamic_cli
         )
-        
+
         dropdown_fatsat2 = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_fatsat_metadata,
-            name="Fat Saturation",
-            info_text=dynamic_cli.params[10].help,
+            option_name = 'fatsat',
+            label="Fat Saturation",
+            cli=dynamic_cli
         )
-        
+
         self.dropdown_coil_format_dyn = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_coil_format_metadata,
-            name="Custom Coil Output Format",
-            info_text=f"{dynamic_cli.params[12].help}",
+            label="Custom Coil Output Format",
+            option_name = 'output-file-format-coil',
+            cli=dynamic_cli,
             list_components=[self.create_empty_component(),
                              self.create_empty_component(),
                              dropdown_fatsat1,
@@ -944,27 +953,23 @@ class B0ShimTab(Tab):
         dropdown_scanner_format_metadata = [
             {
                 "label": "Slicewise per Channel",
-                "option_name": "output-file-format-scanner",
                 "option_value": "slicewise-ch"
             },
             {
                 "label": "Slicewise per Coil",
-                "option_name": "output-file-format-scanner",
                 "option_value": "slicewise-coil"
             },
             {
                 "label": "Chronological per Channel",
-                "option_name": "output-file-format-scanner",
+
                 "option_value": "chronological-ch"
             },
             {
                 "label": "Chronological per Coil",
-                "option_name": "output-file-format-scanner",
                 "option_value": "chronological-coil"
             },
             {
                 "label": "Gradient per Channel",
-                "option_name": "output-file-format-scanner",
                 "option_value": "gradient"
             },
         ]
@@ -972,14 +977,15 @@ class B0ShimTab(Tab):
         dropdown_scanner_format = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
-            name="Scanner Output Format",
-            info_text=f"{dynamic_cli.params[13].help}"
+            option_name = 'output-file-format-scanner',
+            label="Scanner Output Format",
+            cli=dynamic_cli
         )
-        
+
         run_component = RunComponent(
             panel=self,
             list_components=[self.component_coils_dyn, component_inputs, dropdown_opt, self.dropdown_slice_dyn,
-                             dropdown_scanner_order, component_scanner, dropdown_scanner_format, 
+                             dropdown_scanner_order, component_scanner, dropdown_scanner_format,
                              self.dropdown_coil_format_dyn, dropdown_ovf, component_output],
             st_function="st_b0shim dynamic",
             output_paths=["fieldmap_calculated_shim_masked.nii.gz",
@@ -1000,73 +1006,65 @@ class B0ShimTab(Tab):
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
             }
         ]
-        self.component_coils_rt = InputComponent(self, input_text_box_metadata_coil)
+        self.component_coils_rt = InputComponent(self, input_text_box_metadata_coil, cli=realtime_cli)
 
         input_text_box_metadata_inputs = [
             {
                 "button_label": "Input Fieldmap",
                 "name": "fmap",
                 "button_function": "select_from_overlay",
-                "info_text": f"{realtime_cli.params[1].help}",
                 "required": True
             },
             {
                 "button_label": "Input Anat",
                 "name": "anat",
                 "button_function": "select_from_overlay",
-                "info_text": f"{realtime_cli.params[2].help}",
                 "required": True
             },
             {
                 "button_label": "Input Respiratory Trace",
                 "name": "resp",
                 "button_function": "select_file",
-                "info_text": f"{realtime_cli.params[3].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask Static",
                 "name": "mask-static",
                 "button_function": "select_from_overlay",
-                "info_text": f"{realtime_cli.params[4].help}"
             },
             {
                 "button_label": "Input Mask Realtime",
                 "name": "mask-riro",
                 "button_function": "select_from_overlay",
-                "info_text": f"{realtime_cli.params[5].help}"
             },
             {
                 "button_label": "Mask Dilation Kernel Size",
                 "name": "mask-dilation-kernel-size",
-                "info_text": f"{realtime_cli.params[11].help}",
                 "default_text": "3",
             }
         ]
 
-        component_inputs = InputComponent(self, input_text_box_metadata_inputs)
+        component_inputs = InputComponent(self, input_text_box_metadata_inputs, cli=realtime_cli)
 
         input_text_box_metadata_scanner = [
             {
                 "button_label": "Scanner constraints",
                 "button_function": "select_file",
                 "name": "scanner-coil-constraints",
-                "info_text": f"{realtime_cli.params[7].help}",
                 "default_text": f"{os.path.join(ST_DIR, 'coil_config.json')}",
             },
         ]
-        component_scanner = InputComponent(self, input_text_box_metadata_scanner)
+        component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
 
         input_text_box_metadata_slice = [
             {
                 "button_label": "Slice Factor",
                 "name": "slice-factor",
-                "info_text": f"{realtime_cli.params[9].help}",
                 "default_text": "1",
             },
         ]
-        component_slice_int = InputComponent(self, input_text_box_metadata_slice)
-        component_slice_seq = InputComponent(self, input_text_box_metadata_slice)
+        component_slice_int = InputComponent(self, input_text_box_metadata_slice, cli=realtime_cli)
+        component_slice_seq = InputComponent(self, input_text_box_metadata_slice, cli=realtime_cli)
 
         output_metadata = [
             {
@@ -1074,30 +1072,25 @@ class B0ShimTab(Tab):
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{realtime_cli.params[13].help}"
             }
         ]
-        component_output = InputComponent(self, output_metadata)
+        component_output = InputComponent(self, output_metadata, cli=realtime_cli)
 
         dropdown_scanner_order_metadata = [
             {
                 "label": "-1",
-                "option_name": "scanner-coil-order",
                 "option_value": "-1"
             },
             {
                 "label": "0",
-                "option_name": "scanner-coil-order",
                 "option_value": "0"
             },
             {
                 "label": "1",
-                "option_name": "scanner-coil-order",
                 "option_value": "1"
             },
             {
                 "label": "2",
-                "option_name": "scanner-coil-order",
                 "option_value": "2"
             }
         ]
@@ -1105,19 +1098,18 @@ class B0ShimTab(Tab):
         dropdown_scanner_order = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_scanner_order_metadata,
-            name="Scanner Order",
-            info_text=f"{realtime_cli.params[6].help}"
+            label="Scanner Order",
+            option_name = 'scanner-coil-order',
+            cli=realtime_cli
         )
 
         dropdown_ovf_metadata = [
             {
                 "label": "delta",
-                "option_name": "output-value-format",
                 "option_value": "delta"
             },
             {
                 "label": "absolute",
-                "option_name": "output-value-format",
                 "option_value": "absolute"
             }
         ]
@@ -1125,19 +1117,18 @@ class B0ShimTab(Tab):
         dropdown_ovf = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_ovf_metadata,
-            name="Output Value Format",
-            info_text=f"{realtime_cli.params[16].help}"
+            label="Output Value Format",
+            option_name = 'output-value-format',
+            cli=realtime_cli
         )
 
         dropdown_opt_metadata = [
             {
                 "label": "Least Squares",
-                "option_name": "optimizer-method",
                 "option_value": "least_squares"
             },
             {
                 "label": "Pseudo Inverse",
-                "option_name": "optimizer-method",
                 "option_value": "pseudo_inverse"
             },
         ]
@@ -1145,29 +1136,26 @@ class B0ShimTab(Tab):
         dropdown_opt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_opt_metadata,
-            name="Optimizer",
-            info_text=f"{realtime_cli.params[10].help}"
+            label="Optimizer",
+            option_name = 'optimizer-method',
+            cli=realtime_cli
         )
 
         dropdown_slice_metadata = [
             {
                 "label": "Auto detect",
-                "option_name": "slices",
                 "option_value": "auto"
             },
             {
                 "label": "Sequential",
-                "option_name": "slices",
                 "option_value": "sequential"
             },
             {
                 "label": "Interleaved",
-                "option_name": "slices",
                 "option_value": "interleaved"
             },
             {
                 "label": "Volume",
-                "option_name": "slices",
                 "option_value": "volume"
             },
         ]
@@ -1175,28 +1163,26 @@ class B0ShimTab(Tab):
         self.dropdown_slice_rt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
-            name="Slice Ordering",
-            info_text=realtime_cli.params[10].help,
+            label="Slice Ordering",
+            option_name = 'slices',
             list_components=[self.create_empty_component(),
                              component_slice_seq,
                              component_slice_int,
-                             self.create_empty_component()]
+                             self.create_empty_component()],
+            cli=realtime_cli
         )
 
         dropdown_scanner_format_metadata = [
             {
                 "label": "Slicewise per Channel",
-                "option_name": "output-file-format-scanner",
                 "option_value": "slicewise-ch"
             },
             {
                 "label": "Chronological per Channel",
-                "option_name": "output-file-format-scanner",
                 "option_value": "chronological-ch"
             },
             {
                 "label": "Gradient per Channel",
-                "option_name": "output-file-format-scanner",
                 "option_value": "gradient"
             },
         ]
@@ -1204,24 +1190,22 @@ class B0ShimTab(Tab):
         dropdown_scanner_format = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
-            name="Scanner Output Format",
-            info_text=f"{realtime_cli.params[15].help}"
+            label="Scanner Output Format",
+            option_name = 'output-file-format-scanner',
+            cli=realtime_cli
         )
-        
+
         dropdown_fatsat_metadata = [
             {
                 "label": "Auto detect",
-                "option_name": "fatsat",
                 "option_value": "auto"
             },
             {
                 "label": "Yes",
-                "option_name": "fatsat",
                 "option_value": "yes"
             },
             {
                 "label": "No",
-                "option_name": "fatsat",
                 "option_value": "no"
             },
         ]
@@ -1229,19 +1213,18 @@ class B0ShimTab(Tab):
         dropdown_fatsat = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_fatsat_metadata,
-            name="Fat Saturation",
-            info_text=realtime_cli.params[12].help,
+            label="Fat Saturation",
+            option_name = 'fatsat',
+            cli=realtime_cli
         )
-        
+
         dropdown_coil_format_metadata = [
             {
                 "label": "Slicewise per Channel",
-                "option_name": "output-file-format-coil",
                 "option_value": "slicewise-ch"
             },
             {
                 "label": "Chronological per Channel",
-                "option_name": "output-file-format-coil",
                 "option_value": "chronological-ch"
             }
         ]
@@ -1249,12 +1232,13 @@ class B0ShimTab(Tab):
         self.dropdown_coil_format_rt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_coil_format_metadata,
-            name="Custom Coil Output Format",
-            info_text=f"{realtime_cli.params[14].help}",
+            label="Custom Coil Output Format",
+            option_name = 'output-file-format-coil',
+            cli=realtime_cli,
             list_components=[self.create_empty_component(),
                              dropdown_fatsat]
         )
-        
+
         run_component = RunComponent(
             panel=self,
             list_components=[self.component_coils_rt, component_inputs, dropdown_opt, self.dropdown_slice_rt,
@@ -1347,37 +1331,32 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": f"{b1shim_cli.params[4].help}"
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=b1shim_cli)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1394,44 +1373,38 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Target value (nT/V)",
                 "name": "target",
                 "default_text": "20",
-                "info_text": f"{b1shim_cli.params[3].help}",
                 "required": True
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": f"{b1shim_cli.params[4].help}"
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=b1shim_cli)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1448,38 +1421,33 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ map",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Input VOP file",
                 "name": "vop",
                 "button_function": "select_file",
-                "info_text": f"{b1shim_cli.params[4].help}",
                 "required": True
             },
             {
                 "button_label": "SAR factor",
                 "name": "sar_factor",
                 "default_text": "1.5",
-                "info_text": f"{b1shim_cli.params[5].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
 
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=b1shim_cli)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1496,24 +1464,21 @@ class B1ShimTab(Tab):
                 "button_label": "Input B1+ maps",
                 "name": "b1",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Input Mask",
                 "name": "mask",
                 "button_function": "select_from_overlay",
-                "info_text": f"{b1shim_cli.params[1].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{b1shim_cli.params[6].help}"
             }
         ]
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=b1shim_cli)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1530,17 +1495,17 @@ class FieldMapTab(Tab):
                       "Enter the Number of Echoes then press the `Number of Echoes` button.\n\n" \
                       "Select the unwrapper from the dropdown list."
         super().__init__(parent, title, description)
-        
+
         self.sizer_run = self.create_sizer_run()
         self.n_echoes = 0
         sizer = self.create_fieldmap_sizer()
         self.sizer_run.Add(sizer, 0, wx.EXPAND)
-        
+
         self.parent_sizer = self.create_sizer()
         self.SetSizer(self.parent_sizer)
-        
+
     def create_fieldmap_sizer(self):
-        
+
         input_text_box_metadata_input = [
             {
                 "button_label": "Number of Echoes",
@@ -1550,79 +1515,89 @@ class FieldMapTab(Tab):
                 "required": True
             }
         ]
-        dropdown_metadata = [
+        self.component_input = InputComponent(
+            panel=self,
+            input_text_box_metadata=input_text_box_metadata_input
+        )
+
+        dropdown_metadata_unwrapper = [
             {
                 "label": "prelude",
-                "option_name": "unwrapper",
                 "option_value": "prelude"
             }
         ]
-
-        dropdown_mask_threshold = [
-            {
-                "label": "mask",
-                "option_name": "no_arg",
-                "option_value": ""
-            },
-            {
-                "label": "threshold",
-                "option_name": "no_arg",
-                "option_value": ""
-            },
-        ]
-
-        path_output = os.path.join(CURR_DIR, "output_fieldmap")
-
-        input_text_box_metadata_output = [
-            {
-                "button_label": "Output File",
-                "button_function": "select_folder",
-                "default_text": os.path.join(path_output, "fieldmap.nii.gz"),
-                "name": "output",
-                "info_text": f"{prepare_fieldmap_cli.params[3].help}",
-                "required": True
-            }
-        ]
+        self.dropdown = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_metadata_unwrapper,
+            label="Unwrapper",
+            option_name = 'unwrapper',
+            cli=prepare_fieldmap_cli
+        )
 
         mask_metadata = [
             {
                 "button_label": "Input Mask",
                 "button_function": "select_from_overlay",
                 "name": "mask",
-                "info_text": f"{prepare_fieldmap_cli.params[5].help}"
             }
         ]
-
         self.component_mask = InputComponent(
             panel=self,
-            input_text_box_metadata=mask_metadata
+            input_text_box_metadata=mask_metadata,
+            cli=prepare_fieldmap_cli
         )
 
         threshold_metadata = [
             {
                 "button_label": "Threshold",
                 "name": "threshold",
-                "info_text": f"{prepare_fieldmap_cli.params[6].help}"
             },
             {
                 "button_label": "Output Calculated Mask",
                 "name": "savemask",
-                "info_text": f"{prepare_fieldmap_cli.params[7].help}",
                 "load_in_overlay": True
             }
         ]
-
         self.component_threshold = InputComponent(
             panel=self,
-            input_text_box_metadata=threshold_metadata
+            input_text_box_metadata=threshold_metadata,
+            cli=prepare_fieldmap_cli
         )
 
+        dropdown_mask_threshold = [
+            {
+                "label": "mask",
+                "option_value": ""
+            },
+            {
+                "label": "threshold",
+                "option_value": ""
+            },
+        ]
         self.dropdown_mask_threshold = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_mask_threshold,
-            name="Mask/Threshold",
+            label="Mask/Threshold",
             info_text="Masking methods either with a file input or a threshold",
-            list_components=[self.component_mask, self.component_threshold]
+            option_name = 'no_arg',
+            list_components=[self.component_mask, self.component_threshold],
+            cli=prepare_fieldmap_cli
+        )
+
+        path_output = os.path.join(CURR_DIR, "output_fieldmap")
+        input_text_box_metadata_output = [
+            {
+                "button_label": "Output File",
+                "button_function": "select_folder",
+                "default_text": os.path.join(path_output, "fieldmap.nii.gz"),
+                "name": "output",
+                "required": True
+            }
+        ]
+        self.component_output = InputComponent(
+            panel=self,
+            input_text_box_metadata=input_text_box_metadata_output,
+            cli=prepare_fieldmap_cli
         )
 
         input_text_box_metadata_input2 = [
@@ -1630,35 +1605,22 @@ class FieldMapTab(Tab):
                 "button_label": "Input Magnitude",
                 "button_function": "select_from_overlay",
                 "name": "mag",
-                "info_text": f"{prepare_fieldmap_cli.params[1].help}",
                 "required": True
             }
         ]
-        self.component_input = InputComponent(
-            panel=self,
-            input_text_box_metadata=input_text_box_metadata_input
-        )
         self.component_input2 = InputComponent(
             panel=self,
-            input_text_box_metadata=input_text_box_metadata_input2
+            input_text_box_metadata=input_text_box_metadata_input2,
+            cli=prepare_fieldmap_cli
         )
-        self.dropdown = DropdownComponent(
-            panel=self,
-            dropdown_metadata=dropdown_metadata,
-            name="Unwrapper",
-            info_text=f"{prepare_fieldmap_cli.params[2].help}"
-        )
-        self.component_output = InputComponent(
-            panel=self,
-            input_text_box_metadata=input_text_box_metadata_output
-        )
+
         self.run_component = RunComponent(
             panel=self,
             list_components=[self.component_input, self.component_input2, self.dropdown_mask_threshold, self.dropdown,
                              self.component_output],
             st_function="st_prepare_fieldmap"
         )
-        
+
         return self.run_component.sizer
 
 
@@ -1735,24 +1697,21 @@ class MaskTab(Tab):
                 "button_label": "Input",
                 "button_function": "select_from_overlay",
                 "name": "input",
-                "info_text": f"{threshold.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Threshold",
                 "default_text": "30",
                 "name": "thr",
-                "info_text": f"{threshold.params[2].help}"
             },
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
-                "info_text": f"{threshold.params[1].help}"
             }
         ]
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=threshold)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1768,31 +1727,27 @@ class MaskTab(Tab):
                 "button_label": "Input",
                 "button_function": "select_from_overlay",
                 "name": "input",
-                "info_text": f"{rect.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Size",
                 "name": "size",
                 "n_text_boxes": 2,
-                "info_text": f"{rect.params[2].help}",
                 "required": True
             },
             {
                 "button_label": "Center",
                 "name": "center",
                 "n_text_boxes": 2,
-                "info_text": f"{rect.params[3].help}"
             },
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
-                "info_text": f"{rect.params[1].help}"
             }
         ]
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=rect)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1808,31 +1763,27 @@ class MaskTab(Tab):
                 "button_label": "Input",
                 "button_function": "select_from_overlay",
                 "name": "input",
-                "info_text": f"{box.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Size",
                 "name": "size",
                 "n_text_boxes": 3,
-                "info_text": f"{box.params[2].help}",
                 "required": True
             },
             {
                 "button_label": "Center",
                 "name": "center",
                 "n_text_boxes": 3,
-                "info_text": f"{box.params[3].help}"
             },
             {
                 "button_label": "Output File",
                 "button_function": "select_folder",
                 "default_text": os.path.join(path_output, "mask.nii.gz"),
                 "name": "output",
-                "info_text": f"{box.params[1].help}"
             }
         ]
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, box)
         run_component = RunComponent(
             panel=self,
             list_components=[component],
@@ -1846,14 +1797,14 @@ class DicomToNiftiTab(Tab):
     def __init__(self, parent, title="Dicom to Nifti"):
         description = "Convert DICOM files into NIfTI following the BIDS data structure"
         super().__init__(parent, title, description)
-        
+
         self.sizer_run = self.create_sizer_run()
         sizer = self.create_dicom_to_nifti_sizer()
         self.sizer_run.Add(sizer, 0, wx.EXPAND)
-        
+
         self.parent_sizer = self.create_sizer()
         self.SetSizer(self.parent_sizer)
-        
+
     def create_dicom_to_nifti_sizer(self):
         path_output = os.path.join(CURR_DIR, "output_dicom_to_nifti")
         input_text_box_metadata = [
@@ -1861,13 +1812,11 @@ class DicomToNiftiTab(Tab):
                 "button_label": "Input Folder",
                 "button_function": "select_folder",
                 "name": "input",
-                "info_text": f"{dicom_to_nifti_cli.params[0].help}",
                 "required": True
             },
             {
                 "button_label": "Subject Name",
                 "name": "subject",
-                "info_text": f"{dicom_to_nifti_cli.params[1].help}",
                 "required": True
             },
             {
@@ -1875,17 +1824,15 @@ class DicomToNiftiTab(Tab):
                 "button_function": "select_file",
                 "default_text": os.path.join(ST_DIR, "dcm2bids.json"),
                 "name": "config",
-                "info_text": f"{dicom_to_nifti_cli.params[3].help}"
             },
             {
                 "button_label": "Output Folder",
                 "button_function": "select_folder",
                 "default_text": path_output,
                 "name": "output",
-                "info_text": f"{dicom_to_nifti_cli.params[2].help}"
             }
         ]
-        component = InputComponent(self, input_text_box_metadata)
+        component = InputComponent(self, input_text_box_metadata, cli=dicom_to_nifti_cli)
         run_component = RunComponent(panel=self, list_components=[component], st_function="st_dicom_to_nifti")
         return run_component.sizer
 
@@ -2325,6 +2272,17 @@ def load_png_image_from_path(fsl_panel, image_path, is_mask=False, add_to_overla
 
     return img_overlay
 
+
+def get_help_text(cli_function, name):
+    """ Returns the help text of a cli function depending on its name. """
+    for param in cli_function.params:
+        # Try different versions of the input dashes
+        for dashes in ['', '-', '--']:
+            new_name = dashes + name
+            if (new_name in param.opts) or new_name == param.human_readable_name:
+                return param.help
+
+    raise ValueError(f"Could not find param: {name} in {cli_function.name}")
 
 class RunArgumentErrorST(Exception):
     """Exception for missing input arguments for CLI call."""
