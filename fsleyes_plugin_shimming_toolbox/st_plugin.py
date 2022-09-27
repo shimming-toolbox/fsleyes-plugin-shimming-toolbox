@@ -838,6 +838,15 @@ class B0ShimTab(Tab):
             cli=dynamic_cli
         )
 
+        reg_factor_metadata = [
+            {
+                "button_label": "Regularization factor",
+                "default_text": '0.0',
+                "name": 'regularization-factor',
+            }
+        ]
+        component_reg_factor = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+
         dropdown_opt_metadata = [
             {
                 "label": "Least Squares",
@@ -854,6 +863,8 @@ class B0ShimTab(Tab):
             dropdown_metadata=dropdown_opt_metadata,
             label="Optimizer",
             option_name = 'optimizer-method',
+            list_components = [component_reg_factor,
+                               self.create_empty_component()],
             cli=dynamic_cli
         )
 
@@ -1122,6 +1133,16 @@ class B0ShimTab(Tab):
             cli=realtime_cli
         )
 
+
+        reg_factor_metadata = [
+            {
+                "button_label": "Regularization factor",
+                "default_text": '0.0',
+                "name": 'regularization-factor',
+            }
+        ]
+        component_reg_factor = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+
         dropdown_opt_metadata = [
             {
                 "label": "Least Squares",
@@ -1138,6 +1159,8 @@ class B0ShimTab(Tab):
             dropdown_metadata=dropdown_opt_metadata,
             label="Optimizer",
             option_name = 'optimizer-method',
+            list_components= [component_reg_factor,
+                              self.create_empty_component()],
             cli=realtime_cli
         )
 
