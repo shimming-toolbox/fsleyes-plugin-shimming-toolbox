@@ -33,7 +33,9 @@ import wx
 from fsleyes_plugin_shimming_toolbox.events import result_event_type, EVT_RESULT, ResultEvent
 from fsleyes_plugin_shimming_toolbox.events import log_event_type, EVT_LOG, LogEvent
 from fsleyes_plugin_shimming_toolbox.worker_thread import WorkerThread
-from shimmingtoolbox.cli.b0shim import dynamic_cli, realtime_cli, shim_max_intensity_cli
+from shimmingtoolbox.cli.b0shim import dynamic as dynamic_cli
+from shimmingtoolbox.cli.b0shim import realtime_dynamic as realtime_cli
+from shimmingtoolbox.cli.b0shim import max_intensity as max_intensity_cli
 from shimmingtoolbox.cli.b1shim import b1shim_cli
 from shimmingtoolbox.cli.dicom_to_nifti import dicom_to_nifti_cli
 from shimmingtoolbox.cli.mask import box, rect, threshold
@@ -1299,7 +1301,7 @@ class B0ShimTab(Tab):
                 "name": "output",
             }
         ]
-        component_inputs = InputComponent(self, inputs_metadata, cli=shim_max_intensity_cli)
+        component_inputs = InputComponent(self, inputs_metadata, cli=max_intensity_cli)
         
         run_component = RunComponent(
             panel=self,
