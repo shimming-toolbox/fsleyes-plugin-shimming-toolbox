@@ -388,7 +388,7 @@ class DropdownComponent(Component):
         if self.choice_box.GetSelection() < 0:
             print("\nNo selection was found, setting it to the first value")
             selection = self.choice_box.GetString(0)
-            # self.choice_box.SetSelection(0)
+            self.choice_box.SetSelection(0)
         else:
             selection = self.choice_box.GetString(self.choice_box.GetSelection())
 
