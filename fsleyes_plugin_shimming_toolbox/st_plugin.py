@@ -384,11 +384,12 @@ class DropdownComponent(Component):
 
     def on_choice(self, event):
         # Get the selection from the choice box widget
-        if not isinstance(self.choice_box.GetSelection(), int):
+        print(self.choice_box.GetSelection())
+        if self.choice_box.GetSelection() < 0:
             print("\nNo selection was found, setting it to the first value")
             selection = self.choice_box.GetString(0)
+            # self.choice_box.SetSelection(0)
         else:
-            print(f"\n{self.choice_box.GetSelection()}")
             selection = self.choice_box.GetString(self.choice_box.GetSelection())
 
         print(f"\n{selection}")
