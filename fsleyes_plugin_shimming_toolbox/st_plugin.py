@@ -2211,12 +2211,12 @@ def select_file(event, tab, ctrl, focus=False):
     dlg = wx.FileDialog(parent=None,
                         message="Select File",
                         defaultDir=CURR_DIR,
-                        style=wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+                        style=wx.FD_DEFAULT_STYLE | wx.FD_FILE_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
-        path = dlg.GetPath()
-        ctrl.SetValue(path)
-        logger.info(f"File set to: {path}")
+        fname = dlg.GetPath()
+        ctrl.SetValue(fname)
+        logger.info(f"File set to: {fname}")
 
     # Skip allows to handle other events
     event.Skip()
