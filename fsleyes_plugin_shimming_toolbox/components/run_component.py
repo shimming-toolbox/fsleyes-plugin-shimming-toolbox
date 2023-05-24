@@ -11,8 +11,7 @@ import wx
 
 from fsleyes_plugin_shimming_toolbox import __dir_st_plugin__
 from fsleyes_plugin_shimming_toolbox.components.component import Component
-from fsleyes_plugin_shimming_toolbox.events import EVT_RESULT, result_event_type, ResultEvent
-from fsleyes_plugin_shimming_toolbox.events import EVT_LOG, log_event_type, LogEvent
+from fsleyes_plugin_shimming_toolbox.events import EVT_RESULT, EVT_LOG
 from fsleyes_plugin_shimming_toolbox.worker_thread import WorkerThread
 
 # Load icon resources

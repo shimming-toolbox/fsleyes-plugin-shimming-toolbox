@@ -6,7 +6,7 @@ import webbrowser
 import wx
 
 from fsleyes_plugin_shimming_toolbox import __dir_st_plugin__
-from fsleyes_plugin_shimming_toolbox.components.input import InputComponent
+from fsleyes_plugin_shimming_toolbox.components.input_component import InputComponent
 
 # Load icon resources
 rtd_logo = wx.Bitmap(os.path.join(__dir_st_plugin__, 'img', 'RTD.png'), wx.BITMAP_TYPE_PNG)

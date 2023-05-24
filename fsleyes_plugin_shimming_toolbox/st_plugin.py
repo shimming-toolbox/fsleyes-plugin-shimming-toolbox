@@ -24,9 +24,9 @@ from pathlib import Path
 import wx
 
 from fsleyes_plugin_shimming_toolbox.tabs.tab import Tab
-from fsleyes_plugin_shimming_toolbox.components.dropdown import DropdownComponent
-from fsleyes_plugin_shimming_toolbox.components.run import RunComponent
-from fsleyes_plugin_shimming_toolbox.components.input import InputComponent
+from fsleyes_plugin_shimming_toolbox.components.dropdown_component import DropdownComponent
+from fsleyes_plugin_shimming_toolbox.components.run_component import RunComponent
+from fsleyes_plugin_shimming_toolbox.components.input_component import InputComponent
 from shimmingtoolbox.cli.b0shim import dynamic as dynamic_cli
 from shimmingtoolbox.cli.b0shim import realtime_dynamic as realtime_cli
 from shimmingtoolbox.cli.b0shim import max_intensity as max_intensity_cli
