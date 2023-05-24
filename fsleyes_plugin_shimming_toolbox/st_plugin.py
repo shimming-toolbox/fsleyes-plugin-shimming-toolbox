@@ -27,17 +27,13 @@ from fsleyes_plugin_shimming_toolbox.tabs.dicom_to_nifti_tab import DicomToNifti
 from fsleyes_plugin_shimming_toolbox.tabs.fieldmap_tab import FieldMapTab
 from fsleyes_plugin_shimming_toolbox.tabs.mask_tab import MaskTab
 
-logger = logging.getLogger(__name__)
-
-VERSION = "0.1.1"
-
 
 # We need to create a ctrlpanel.ControlPanel instance so that it can be recognized as a plugin by FSLeyes
 # Class hierarchy: wx.Panel > fslpanel.FSLeyesPanel > ctrlpanel.ControlPanel
 class STControlPanel(ctrlpanel.ControlPanel):
     """Class for Shimming Toolbox Control Panel"""
 
-    # The CanvasPanel view is used for most FSLeyes plugins so we decided to stick to it
+    # The CanvasPanel view is used for most FSLeyes plugins
     @staticmethod
     def supportedViews():
         return [canvaspanel.CanvasPanel]
