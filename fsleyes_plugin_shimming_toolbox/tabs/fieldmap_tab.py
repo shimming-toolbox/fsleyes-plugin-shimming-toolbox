@@ -90,6 +90,10 @@ class FieldMapTab(Tab):
 
         dropdown_mask_threshold = [
             {
+                "label": "auto threshold",
+                "option_value": ""
+            },
+            {
                 "label": "mask",
                 "option_value": ""
             },
@@ -98,13 +102,14 @@ class FieldMapTab(Tab):
                 "option_value": ""
             },
         ]
-        self.dropdown_mask_threshold = DropdownComponent(
+
+        self.dropdown_roi = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_mask_threshold,
-            label="Mask/Threshold",
+            label="Unwrapping region",
             info_text="Masking methods either with a file input or a threshold",
-            option_name = 'no_arg',
-            list_components=[self.component_mask, self.component_threshold],
+            option_name='no_arg',
+            list_components=[self.create_empty_component(), self.component_mask, self.component_threshold],
             cli=prepare_fieldmap_cli
         )
 
@@ -140,7 +145,7 @@ class FieldMapTab(Tab):
 
         self.run_component = RunComponent(
             panel=self,
-            list_components=[self.component_input, self.component_input2, self.dropdown_mask_threshold,
+            list_components=[self.component_input, self.component_input2, self.dropdown_roi,
                              self.dropdown_unwrapper, self.component_output],
             st_function="st_prepare_fieldmap"
         )
