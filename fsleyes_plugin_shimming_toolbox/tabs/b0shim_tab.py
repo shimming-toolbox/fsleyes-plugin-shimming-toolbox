@@ -26,7 +26,7 @@ class B0ShimTab(Tab):
         self.positions = {}
         self.dropdown_metadata = [
             {
-                "name": "Dynamic",
+                "name": "Dynamic/volume",
                 "sizer_function": self.create_sizer_dynamic_shim
             },
             {
@@ -77,7 +77,7 @@ class B0ShimTab(Tab):
 
             # When doing Show(True), we show everything in the sizer, we need to call the dropdowns that can contain
             # items to show the appropriate things according to their current choice.
-            if selection == 'Dynamic':
+            if selection == 'Dynamic/volume':
                 self.dropdown_slice_dyn.on_choice(None)
                 self.dropdown_coil_format_dyn.on_choice(None)
                 self.dropdown_scanner_order_dyn.on_choice(None)
