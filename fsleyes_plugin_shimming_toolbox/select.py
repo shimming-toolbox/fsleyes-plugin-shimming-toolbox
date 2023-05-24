@@ -2,12 +2,11 @@
 # -*- coding: utf-8 -*
 
 import logging
-import os
 import wx
 
-logger = logging.getLogger(__name__)
+from fsleyes_plugin_shimming_toolbox import __CURR_DIR__
 
-CURR_DIR = os.getcwd()
+logger = logging.getLogger(__name__)
 
 
 def select_folder(event, tab, ctrl, focus=False):
@@ -23,7 +22,7 @@ def select_folder(event, tab, ctrl, focus=False):
             event.Skip()
             return
 
-    dlg = wx.DirDialog(None, "Choose Directory", CURR_DIR, wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
+    dlg = wx.DirDialog(None, "Choose Directory", __CURR_DIR__, wx.DD_DEFAULT_STYLE | wx.DD_DIR_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
         folder = dlg.GetPath()
@@ -49,7 +48,7 @@ def select_file(event, tab, ctrl, focus=False):
 
     dlg = wx.FileDialog(parent=None,
                         message="Select File",
-                        defaultDir=CURR_DIR,
+                        defaultDir=__CURR_DIR__,
                         style=wx.FD_DEFAULT_STYLE | wx.FD_FILE_MUST_EXIST)
 
     if dlg.ShowModal() == wx.ID_OK:
