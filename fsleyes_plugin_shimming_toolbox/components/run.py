@@ -332,4 +332,3 @@ def read_image(filename, bitdepth=8):
 def write_image(filename, img, format='png'):
     """Write image."""
     imageio.imwrite(filename, img, format=format)
-
