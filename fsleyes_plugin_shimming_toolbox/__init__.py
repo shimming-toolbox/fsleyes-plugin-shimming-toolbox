@@ -1,3 +1,8 @@
 import os
+from pathlib import Path
 
-__dir_st_plugin__ = os.path.dirname(os.path.realpath(__file__))
+
+HOME_DIR = str(Path.home())
+__CURR_DIR__ = os.getcwd()
+__ST_DIR__ = f"{HOME_DIR}/shimming-toolbox"
+__DIR_ST_PLUGIN__ = os.path.dirname(os.path.realpath(__file__))
