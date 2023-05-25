@@ -18,7 +18,6 @@ Authors: Alexandre D'Astous, Ainsleigh Hill, Gaspard Cereza, Julien Cohen-Adad
 
 import fsleyes.controls.controlpanel as ctrlpanel
 import fsleyes.views.canvaspanel as canvaspanel
-import logging
 import wx
 
 from fsleyes_plugin_shimming_toolbox.tabs.b0shim_tab import B0ShimTab
