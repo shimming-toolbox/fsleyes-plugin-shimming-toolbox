@@ -151,4 +151,3 @@ class FieldMapTab(Tab):
         )
 
         return self.run_component.sizer
-

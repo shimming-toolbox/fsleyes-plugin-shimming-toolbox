@@ -789,4 +789,3 @@ class B0ShimTab(Tab):
         )
         sizer = run_component.sizer
         return sizer
-
