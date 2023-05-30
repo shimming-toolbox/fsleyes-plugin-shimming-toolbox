@@ -28,7 +28,7 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('**/setup.py') }}
           restore-keys: |
             ${{ runner.os }}-pip-
-      - name: Install shimming-toolbox
+      - name: Install fsleyes-plugin-shimming-toolbox
         if: steps.cache-pip-dependencies.cache-hit != 'true'
         run: |
           pip install .
