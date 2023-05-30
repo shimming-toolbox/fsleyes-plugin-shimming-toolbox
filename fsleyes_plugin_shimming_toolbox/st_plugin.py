@@ -65,6 +65,7 @@ class STControlPanel(ctrlpanel.ControlPanel):
         nb.AddPage(tab5, tab5.title)
 
         self.sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer.AddSpacer(5)
         self.sizer.Add(nb, 2, wx.EXPAND)
         self.sizer.Add(nb.terminal_component.sizer, 1, wx.EXPAND)
         self.sizer.AddSpacer(5)
