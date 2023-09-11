@@ -4,7 +4,7 @@
 import os
 import wx
 
-from fsleyes_plugin_shimming_toolbox import __CURR_DIR__, __ST_DIR__
+from fsleyes_plugin_shimming_toolbox import __CURR_DIR__
 from fsleyes_plugin_shimming_toolbox.tabs.tab import Tab
 from fsleyes_plugin_shimming_toolbox.components.dropdown_component import DropdownComponent
 from fsleyes_plugin_shimming_toolbox.components.input_component import InputComponent
@@ -172,7 +172,6 @@ class B0ShimTab(Tab):
                 "button_label": "Scanner constraints",
                 "button_function": "select_file",
                 "name": "scanner-coil-constraints",
-                "default_text": f"{os.path.join(__ST_DIR__, 'coil_config.json')}",
             },
         ]
         component_scanner1 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
@@ -497,7 +496,6 @@ class B0ShimTab(Tab):
                 "button_label": "Scanner constraints",
                 "button_function": "select_file",
                 "name": "scanner-coil-constraints",
-                "default_text": f"{os.path.join(__ST_DIR__, 'coil_config.json')}",
             },
         ]
         component_scanner1 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
