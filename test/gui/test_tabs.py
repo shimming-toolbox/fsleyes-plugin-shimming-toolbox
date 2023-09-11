@@ -78,7 +78,7 @@ def _test_st_plugin_dcm2niix_run(view, overlayList, displayCtx):
                 if widget.GetLabel() == 'Run':
                     simclick(sim, widget)
 
-        # Search for files in the overllay for a maximum of 20s
+        # Search for files in the overlay for a maximum of 20s
         time_limit = 20  # s
         for i in range(time_limit):
             realYield()
