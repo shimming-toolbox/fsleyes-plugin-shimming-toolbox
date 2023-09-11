@@ -7,7 +7,7 @@ set -e
 
 ST_DIR=$HOME/shimming-toolbox
 
-cd $ST_DIR
+cd "${ST_DIR}"
 
 # Remove previous install
 rm -rf "${ST_DIR}/shimming-toolbox"
