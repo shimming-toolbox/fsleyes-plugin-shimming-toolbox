@@ -148,6 +148,9 @@ class RunComponent(Component):
         Calls the relevant ``Shimming Toolbox`` CLI command (``st_function``) in a thread
 
         """
+        self.run()
+
+    def run(self):
         if not self.worker:
             try:
                 command, msg = self.get_run_args(self.st_function)
