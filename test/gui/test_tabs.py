@@ -71,12 +71,8 @@ def _test_st_plugin_dcm2niix_run(view, overlayList, displayCtx):
                     widget.SetValue(tmp)
                     realYield()
 
-        # Simulate a mouse click on the run button
-        sim = wx.UIActionSimulator()
-        for widget in list_widgets:
-            if isinstance(widget, wx.Button):
-                if widget.GetLabel() == 'Run':
-                    simclick(sim, widget)
+        # Call the function ran when clicking run button
+        dcm2nifti_tab.run_component.run()
 
         # Search for files in the overlay for a maximum of 20s
         time_limit = 20  # s
