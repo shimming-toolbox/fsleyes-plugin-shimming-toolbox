@@ -287,7 +287,8 @@ class B0ShimTab(Tab):
                 "name": 'regularization-factor',
             }
         ]
-        component_reg_factor = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+        component_reg_factor_lsq = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+        component_reg_factor_qp = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
 
         criteria_dropdown_metadata = [
             {
@@ -317,6 +318,10 @@ class B0ShimTab(Tab):
                 "label": "Pseudo Inverse",
                 "option_value": "pseudo_inverse"
             },
+            {
+                "label": "Quad Prog",
+                "option_value": "quad_prog"
+            }
         ]
 
         self.dropdown_opt_dyn = DropdownComponent(
@@ -324,8 +329,9 @@ class B0ShimTab(Tab):
             dropdown_metadata=dropdown_opt_metadata,
             label="Optimizer",
             option_name='optimizer-method',
-            list_components=[dropdown_crit, component_reg_factor, self.create_empty_component()],
-            component_to_dropdown_choice=[0, 0, 1],
+            list_components=[dropdown_crit, component_reg_factor_lsq,
+                             self.create_empty_component(), component_reg_factor_qp],
+            component_to_dropdown_choice=[0, 0, 1, 2],
             cli=dynamic_cli
         )
 
@@ -623,7 +629,8 @@ class B0ShimTab(Tab):
                 "name": 'regularization-factor',
             }
         ]
-        component_reg_factor = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+        component_reg_factor_lsq = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
+        component_reg_factor_qp = InputComponent(self, reg_factor_metadata, cli=dynamic_cli)
 
         criteria_dropdown_metadata = [
             {
@@ -653,15 +660,20 @@ class B0ShimTab(Tab):
                 "label": "Pseudo Inverse",
                 "option_value": "pseudo_inverse"
             },
+            {
+                "label": "Quad Prog",
+                "option_value": "quad_prog"
+            }
         ]
 
         self.dropdown_opt_rt = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_opt_metadata,
             label="Optimizer",
-            option_name = 'optimizer-method',
-            list_components= [dropdown_crit, component_reg_factor, self.create_empty_component()],
-            component_to_dropdown_choice=[0, 0, 1],
+            option_name='optimizer-method',
+            list_components=[dropdown_crit, component_reg_factor_lsq,
+                             self.create_empty_component(), component_reg_factor_qp],
+            component_to_dropdown_choice=[0, 0, 1, 2],
             cli=realtime_cli
         )
 
