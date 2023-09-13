@@ -46,15 +46,19 @@ class FieldMapTab(Tab):
 
         dropdown_metadata_unwrapper = [
             {
-                "label": "prelude",
+                "label": "Prelude",
                 "option_value": "prelude"
+            },
+            {
+                "label": "Skimage",
+                "option_value": "skimage"
             }
         ]
         self.dropdown_unwrapper = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_metadata_unwrapper,
             label="Unwrapper",
-            option_name = 'unwrapper',
+            option_name='unwrapper',
             cli=prepare_fieldmap_cli
         )
 
