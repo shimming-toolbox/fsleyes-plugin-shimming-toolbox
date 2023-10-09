@@ -15,6 +15,16 @@ from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
 
 class FieldMapTab(Tab):
     def __init__(self, parent, title="Fieldmap"):
+
+        self.run_component = None
+        self.component_input2 = None
+        self.component_output = None
+        self.dropdown_roi = None
+        self.component_threshold = None
+        self.component_mask = None
+        self.dropdown_unwrapper = None
+        self.component_input = None
+
         description = "Create a B0 fieldmap.\n\n" \
                       "Enter the Number of Echoes then press the `Number of Echoes` button.\n\n" \
                       "Select the unwrapper from the dropdown list."
