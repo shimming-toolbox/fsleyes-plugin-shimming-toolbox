@@ -17,11 +17,67 @@ from fsleyes_plugin_shimming_toolbox import __dir_testing__
 from fsleyes_plugin_shimming_toolbox.tabs.b0shim_tab import B0ShimTab
 
 
-def test_st_plugin_b0shim_run():
-    run_with_orthopanel(_test_st_plugin_b0shim_run)
+def test_st_plugin_b0shim_dyn_lsq_mse():
+    options = {'optimizer-method': 'Least Squares',
+               'optimizer-criteria': 'Mean Squared Error',
+               'slices': 'Auto detect',
+               'scanner-coil-order': '1',
+               'output-file-format-scanner': 'Slicewise per Channel',
+               'output-file-format-coil': 'Slicewise per Channel',
+               'fatsat': 'Auto detect',
+               'output-value-format': 'delta'
+               }
+
+    def _test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options):
+        __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options)
+    run_with_orthopanel(_test_st_plugin_b0shim_dyn)
 
 
-def _test_st_plugin_b0shim_run(view, overlayList, displayCtx):
+def test_st_plugin_b0shim_dyn_lsq_mae():
+    options = {'optimizer-method': 'Least Squares',
+               'optimizer-criteria': 'Mean Absolute Error',
+               'slices': 'Auto detect',
+               'scanner-coil-order': '1',
+               'output-file-format-scanner': 'Slicewise per Channel',
+               'output-file-format-coil': 'Slicewise per Channel',
+               'output-value-format': 'delta'
+               }
+
+    def _test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options):
+        __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options)
+    run_with_orthopanel(_test_st_plugin_b0shim_dyn)
+
+
+def test_st_plugin_b0shim_dyn_pi():
+    options = {'optimizer-method': 'Pseudo Inverse',
+               'slices': 'Auto detect',
+               'scanner-coil-order': '1',
+               'output-file-format-scanner': 'Slicewise per Channel',
+               'output-file-format-coil': 'Slicewise per Channel',
+               'output-value-format': 'delta'
+               }
+
+    def _test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options):
+        __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options)
+    run_with_orthopanel(_test_st_plugin_b0shim_dyn)
+
+
+def test_st_plugin_b0shim_dyn_qp():
+    options = {'optimizer-method': 'Quad Prog',
+               'optimizer-criteria': 'Mean Squared Error',
+               'slices': 'Auto detect',
+               'scanner-coil-order': '1',
+               'output-file-format-scanner': 'Slicewise per Channel',
+               'output-file-format-coil': 'Slicewise per Channel',
+               'output-value-format': 'delta'
+               }
+
+    def _test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options):
+        __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options=options)
+    run_with_orthopanel(_test_st_plugin_b0shim_dyn)
+
+
+def __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options):
     """ Makes sure the B0 shim tab runs (Add dummy input and simulate a click) """
     nb_terminal = get_notebook(view)
 
@@ -61,17 +117,39 @@ def _test_st_plugin_b0shim_run(view, overlayList, displayCtx):
         for widget in list_widgets:
             if isinstance(widget, wx.Choice) and widget.IsShown():
                 if widget.GetName() == 'optimizer-method':
-                    assert set_dropdown_selection(widget, 'Least Squares')
+                    assert set_dropdown_selection(widget, options['optimizer-method'])
                 if widget.GetName() == 'scanner-coil-order':
-                    assert set_dropdown_selection(widget, '1')
-                # optimizer-criteria, slices, scanner-coil-order, output-file-format-scanner, output-file-format-coil,
-                # fatsat, output-value-format
+                    assert set_dropdown_selection(widget, options['scanner-coil-order'])
+                if widget.GetName() == 'slices':
+                    assert set_dropdown_selection(widget, options['slices'])
+                if widget.GetName() == 'scanner-coil-order':
+                    assert set_dropdown_selection(widget, options['scanner-coil-order'])
+                if widget.GetName() == 'output-value-format':
+                    assert set_dropdown_selection(widget, options['output-value-format'])
+        # Select the dropdowns that are nested
+        list_widgets = []
+        get_all_children(b0shim_tab.sizer_run, list_widgets)
+        for widget in list_widgets:
+            if isinstance(widget, wx.Choice) and widget.IsShown():
+                if widget.GetName() == 'optimizer-criteria':
+                    assert set_dropdown_selection(widget, options['optimizer-criteria'])
+                if widget.GetName() == 'output-file-format-scanner':
+                    assert set_dropdown_selection(widget, options['output-file-format-scanner'])
+                if widget.GetName() == 'output-file-format-scanner':
+                    assert set_dropdown_selection(widget, options['output-file-format-coil'])
+        # Select the dropdowns that are nested
+        list_widgets = []
+        get_all_children(b0shim_tab.sizer_run, list_widgets)
+        for widget in list_widgets:
+            if isinstance(widget, wx.Choice) and widget.IsShown():
+                if widget.GetName() == 'fatsat':
+                    assert set_dropdown_selection(widget, options['fatsat'])
 
         # Fill in the text boxes
         list_widgets = []
         get_all_children(b0shim_tab.sizer_run, list_widgets)
         for widget in list_widgets:
-            if isinstance(widget, wx.TextCtrl):
+            if isinstance(widget, wx.TextCtrl) and widget.IsShown():
                 if widget.GetName() == 'no_arg_ncoils_dyn':
                     widget.SetValue('0')
                     realYield()

@@ -35,7 +35,7 @@ def _test_st_plugin_dcm2niix_run(view, overlayList, displayCtx):
         list_widgets = []
         get_all_children(dcm2nifti_tab.sizer_run, list_widgets)
         for widget in list_widgets:
-            if isinstance(widget, wx.TextCtrl):
+            if isinstance(widget, wx.TextCtrl) and widget.IsShown():
                 if widget.GetName() == 'input':
                     widget.SetValue(path_input)
                     realYield()

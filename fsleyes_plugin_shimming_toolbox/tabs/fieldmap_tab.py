@@ -16,6 +16,8 @@ from shimmingtoolbox.cli.prepare_fieldmap import prepare_fieldmap_cli
 class FieldMapTab(Tab):
     def __init__(self, parent, title="Fieldmap"):
 
+        self.component_save_mask1 = None
+        self.component_save_mask2 = None
         self.run_component = None
         self.component_input2 = None
         self.component_output = None
@@ -84,16 +86,30 @@ class FieldMapTab(Tab):
             input_text_box_metadata=mask_metadata,
             cli=prepare_fieldmap_cli
         )
+        save_mask_metadata = [
+            {
+                "button_label": "Output Calculated Mask",
+                "name": "savemask",
+                "load_in_overlay": True
+            }
+        ]
+
+        self.component_save_mask1 = InputComponent(
+            panel=self,
+            input_text_box_metadata=save_mask_metadata,
+            cli=prepare_fieldmap_cli
+        )
+
+        self.component_save_mask2 = InputComponent(
+            panel=self,
+            input_text_box_metadata=save_mask_metadata,
+            cli=prepare_fieldmap_cli
+        )
 
         threshold_metadata = [
             {
                 "button_label": "Threshold",
                 "name": "threshold",
-            },
-            {
-                "button_label": "Output Calculated Mask",
-                "name": "savemask",
-                "load_in_overlay": True
             }
         ]
         self.component_threshold = InputComponent(
@@ -123,7 +139,8 @@ class FieldMapTab(Tab):
             label="Unwrapping region",
             info_text="Masking methods either with a file input or a threshold",
             option_name='no_arg_roi',
-            list_components=[self.create_empty_component(), self.component_mask, self.component_threshold],
+            list_components=[self.component_save_mask1, self.component_mask, self.component_threshold, self.component_save_mask2],
+            component_to_dropdown_choice=[0, 1, 2, 2],
             cli=prepare_fieldmap_cli
         )
 
