@@ -24,12 +24,12 @@ class DropdownComponent(Component):
                     }
 
             label (str): Label of the button describing the dropdown
-            option_name (str): Name of the options of the dropdown, set to 'no_arg' is not an option
+            option_name (str): Name of the options of the dropdown, start with 'no_arg' if it is not an option
             list_components (list): list of Components
             info_text (str): Info message displayed when hovering over the "i" icon. Leave blank to auto fill using option_name
             cli (function): CLI function used by the dropdown
-            component_to_dropdown_choice (list): Tells which component associates with which dropdown selection. 
-                                                 If None, assumes 1:1. 
+            component_to_dropdown_choice (list): Tells which component associates with which dropdown selection.
+                                                 If None, assumes 1:1.
         """
         super().__init__(panel, list_components)
         self.dropdown_metadata = dropdown_metadata

@@ -114,7 +114,7 @@ class B0ShimTab(Tab):
             {
                 "button_label": "Number of Custom Coils",
                 "button_function": "add_input_coil_boxes_dyn",
-                "name": "no_arg",
+                "name": "no_arg_ncoils_dyn",
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
             }
         ]
@@ -453,7 +453,7 @@ class B0ShimTab(Tab):
             {
                 "button_label": "Number of Custom Coils",
                 "button_function": "add_input_coil_boxes_rt",
-                "name": "no_arg",
+                "name": "no_arg_ncoils_rt",
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
             }
         ]

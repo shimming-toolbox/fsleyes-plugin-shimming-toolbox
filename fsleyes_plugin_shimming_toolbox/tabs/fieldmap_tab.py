@@ -34,7 +34,7 @@ class FieldMapTab(Tab):
             {
                 "button_label": "Number of Echoes",
                 "button_function": "add_input_phase_boxes",
-                "name": "no_arg",
+                "name": "no_arg_nechoes",
                 "info_text": "Number of phase NIfTI files to be used. Must be an integer > 0.",
                 "required": True
             }
@@ -112,7 +112,7 @@ class FieldMapTab(Tab):
             dropdown_metadata=dropdown_mask_threshold,
             label="Unwrapping region",
             info_text="Masking methods either with a file input or a threshold",
-            option_name='no_arg',
+            option_name='no_arg_roi',
             list_components=[self.create_empty_component(), self.component_mask, self.component_threshold],
             cli=prepare_fieldmap_cli
         )

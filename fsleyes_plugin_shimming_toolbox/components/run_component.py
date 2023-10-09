@@ -191,7 +191,7 @@ class RunComponent(Component):
         for component in self.list_components:
             for name, input_text_box_list in component.input_text_boxes.items():
 
-                if name == "no_arg":
+                if name.startswith('no_arg'):
                     continue
 
                 for input_text_box in input_text_box_list:
