@@ -58,13 +58,9 @@ def set_notebook_page(nb_terminal, page_name):
 def get_tab(nb_terminal, tab_instance):
     """ Returns the tab instance from the ST notebook."""
     tabs = nb_terminal.GetChildren()
-    output_tab = None
     for tab in tabs:
         if isinstance(tab, tab_instance):
-            output_tab = tab
-            break
-
-    return output_tab
+            return tab
 
 
 def get_all_children(item, list_widgets, depth=None):
