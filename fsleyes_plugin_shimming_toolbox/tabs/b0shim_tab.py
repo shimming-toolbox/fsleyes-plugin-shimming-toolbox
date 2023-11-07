@@ -254,6 +254,10 @@ class B0ShimTab(Tab):
             {
                 "label": "2",
                 "option_value": "2"
+            },
+            {
+                "label": "3",
+                "option_value": "3"
             }
         ]
 
@@ -596,6 +600,10 @@ class B0ShimTab(Tab):
             {
                 "label": "2",
                 "option_value": "2"
+            },
+            {
+                "label": "3",
+                "option_value": "3"
             }
         ]
 
@@ -715,7 +723,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_slice_metadata,
             label="Slice Ordering",
-            option_name = 'slices',
+            option_name='slices',
             list_components=[self.create_empty_component(),
                              component_slice_seq,
                              component_slice_int,
