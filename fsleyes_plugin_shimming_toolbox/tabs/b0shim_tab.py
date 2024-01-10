@@ -9,6 +9,7 @@ from fsleyes_plugin_shimming_toolbox.tabs.tab import Tab
 from fsleyes_plugin_shimming_toolbox.components.dropdown_component import DropdownComponent
 from fsleyes_plugin_shimming_toolbox.components.input_component import InputComponent
 from fsleyes_plugin_shimming_toolbox.components.run_component import RunComponent
+from fsleyes_plugin_shimming_toolbox.components.checkbox_component import CheckboxComponent
 
 from shimmingtoolbox.cli.b0shim import dynamic as dynamic_cli
 from shimmingtoolbox.cli.b0shim import realtime_dynamic as realtime_cli
@@ -93,7 +94,7 @@ class B0ShimTab(Tab):
             if selection == 'Dynamic/volume':
                 self.dropdown_slice_dyn.on_choice(None)
                 self.dropdown_coil_format_dyn.on_choice(None)
-                self.dropdown_scanner_order_dyn.on_choice(None)
+                # self.dropdown_scanner_order_dyn.on_choice(None)
                 self.dropdown_opt_dyn.on_choice(None)
             elif selection == 'Realtime Dynamic':
                 self.dropdown_slice_rt.on_choice(None)
@@ -256,7 +257,7 @@ class B0ShimTab(Tab):
                 "option_value": "0,1,2"
             }
         ]
-
+        
         self.dropdown_scanner_order_dyn = DropdownComponent(
             panel=self,
             dropdown_metadata=dropdown_scanner_order_metadata,
@@ -269,11 +270,23 @@ class B0ShimTab(Tab):
             component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
             cli=dynamic_cli
         )
+        # option_name='scanner-coil-order',
+        #     list_components=[self.create_empty_component(),
+        #                      dropdown_scanner_format1, component_scanner1,
+        #                      dropdown_scanner_format2, component_scanner2,
+        #                      dropdown_scanner_format3, component_scanner3],
+        #     component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
+        #     cli=dynamic_cli
 
         dropdown_scanner_format1.add_dropdown_parent(self.dropdown_scanner_order_dyn)
         dropdown_scanner_format2.add_dropdown_parent(self.dropdown_scanner_order_dyn)
         dropdown_scanner_format3.add_dropdown_parent(self.dropdown_scanner_order_dyn)
 
+        self.checkbox_scanner_order = CheckboxComponent(
+            panel=self,
+            label="r Order",
+        )
+        
         dropdown_ovf_metadata = [
             {
                 "label": "delta",
@@ -449,7 +462,7 @@ class B0ShimTab(Tab):
         self.run_component_dyn = RunComponent(
             panel=self,
             list_components=[self.component_coils_dyn, component_inputs, self.dropdown_opt_dyn, self.dropdown_slice_dyn,
-                             self.dropdown_scanner_order_dyn,
+                             self.checkbox_scanner_order,self.dropdown_scanner_order_dyn,
                              self.dropdown_coil_format_dyn, dropdown_ovf, component_output],
             st_function="st_b0shim dynamic",
             output_paths=["fieldmap_calculated_shim_masked.nii.gz",
