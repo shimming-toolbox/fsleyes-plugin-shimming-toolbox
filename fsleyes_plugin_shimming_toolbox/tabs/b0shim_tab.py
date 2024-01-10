@@ -190,6 +190,7 @@ class B0ShimTab(Tab):
         component_scanner1 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
         component_scanner2 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
         component_scanner3 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
+        component_scanner4 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
 
         dropdown_scanner_format_metadata = [
             {
@@ -238,6 +239,14 @@ class B0ShimTab(Tab):
             cli=dynamic_cli
         )
 
+        dropdown_scanner_format4 = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_scanner_format_metadata,
+            option_name='output-file-format-scanner',
+            label="Scanner Output Format",
+            cli=dynamic_cli
+        )
+
         dropdown_scanner_order_metadata = [
             {
                 "label": "-1",
@@ -269,14 +278,16 @@ class B0ShimTab(Tab):
             list_components=[self.create_empty_component(),
                              dropdown_scanner_format1, component_scanner1,
                              dropdown_scanner_format2, component_scanner2,
-                             dropdown_scanner_format3, component_scanner3],
-            component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
+                             dropdown_scanner_format3, component_scanner3,
+                             dropdown_scanner_format4, component_scanner4],
+            component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3, 4, 4],
             cli=dynamic_cli
         )
 
         dropdown_scanner_format1.add_dropdown_parent(self.dropdown_scanner_order_dyn)
         dropdown_scanner_format2.add_dropdown_parent(self.dropdown_scanner_order_dyn)
         dropdown_scanner_format3.add_dropdown_parent(self.dropdown_scanner_order_dyn)
+        dropdown_scanner_format4.add_dropdown_parent(self.dropdown_scanner_order_dyn)
 
         dropdown_ovf_metadata = [
             {
@@ -524,6 +535,7 @@ class B0ShimTab(Tab):
         component_scanner1 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
         component_scanner2 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
         component_scanner3 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
+        component_scanner4 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
 
         input_text_box_metadata_slice = [
             {
@@ -564,7 +576,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
             label="Scanner Output Format",
-            option_name = 'output-file-format-scanner',
+            option_name='output-file-format-scanner',
             cli=realtime_cli
         )
 
@@ -572,7 +584,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
             label="Scanner Output Format",
-            option_name = 'output-file-format-scanner',
+            option_name='output-file-format-scanner',
             cli=realtime_cli
         )
 
@@ -580,7 +592,15 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_format_metadata,
             label="Scanner Output Format",
-            option_name = 'output-file-format-scanner',
+            option_name='output-file-format-scanner',
+            cli=realtime_cli
+        )
+
+        dropdown_scanner_format4 = DropdownComponent(
+            panel=self,
+            dropdown_metadata=dropdown_scanner_format_metadata,
+            label="Scanner Output Format",
+            option_name='output-file-format-scanner',
             cli=realtime_cli
         )
 
@@ -611,18 +631,20 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_scanner_order_metadata,
             label="Scanner Order",
-            option_name = 'scanner-coil-order',
+            option_name='scanner-coil-order',
             list_components=[self.create_empty_component(),
                              dropdown_scanner_format1, component_scanner1,
                              dropdown_scanner_format2, component_scanner2,
-                             dropdown_scanner_format3, component_scanner3],
-            component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
+                             dropdown_scanner_format3, component_scanner3,
+                             dropdown_scanner_format4, component_scanner4],
+            component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3, 4, 4],
             cli=realtime_cli
         )
 
         dropdown_scanner_format1.add_dropdown_parent(self.dropdown_scanner_order_rt)
         dropdown_scanner_format2.add_dropdown_parent(self.dropdown_scanner_order_rt)
         dropdown_scanner_format3.add_dropdown_parent(self.dropdown_scanner_order_rt)
+        dropdown_scanner_format4.add_dropdown_parent(self.dropdown_scanner_order_rt)
 
         dropdown_ovf_metadata = [
             {
@@ -639,7 +661,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_ovf_metadata,
             label="Output Value Format",
-            option_name = 'output-value-format',
+            option_name='output-value-format',
             cli=realtime_cli
         )
 
@@ -750,7 +772,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_fatsat_metadata,
             label="Fat Saturation",
-            option_name = 'fatsat',
+            option_name='fatsat',
             cli=realtime_cli
         )
 
@@ -769,7 +791,7 @@ class B0ShimTab(Tab):
             panel=self,
             dropdown_metadata=dropdown_coil_format_metadata,
             label="Custom Coil Output Format",
-            option_name = 'output-file-format-coil',
+            option_name='output-file-format-coil',
             cli=realtime_cli,
             list_components=[self.create_empty_component(),
                              dropdown_fatsat]
