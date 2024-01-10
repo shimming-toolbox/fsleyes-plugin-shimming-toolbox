@@ -249,11 +249,11 @@ class B0ShimTab(Tab):
             },
             {
                 "label": "1",
-                "option_value": "1"
+                "option_value": "0,1"
             },
             {
                 "label": "2",
-                "option_value": "2"
+                "option_value": "0,1,2"
             }
         ]
 
@@ -591,11 +591,11 @@ class B0ShimTab(Tab):
             },
             {
                 "label": "1",
-                "option_value": "1"
+                "option_value": "0,1"
             },
             {
                 "label": "2",
-                "option_value": "2"
+                "option_value": "0,1,2"
             }
         ]
 

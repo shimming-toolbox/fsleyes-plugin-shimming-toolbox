@@ -237,6 +237,12 @@ class RunComponent(Component):
             command += ['--' + name]
             for arg in args:
                 command += [arg]
+                
+            if st_function == 'st_b0shim realtime-dynamic' and \
+            (name == 'coil' or name == 'scanner-coil-order'):
+                command += ['--' + name + '-riro']
+                for arg in args:
+                    command += [arg]
 
         msg += ' '.join(command) + '\n'
 
