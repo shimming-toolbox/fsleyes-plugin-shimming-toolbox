@@ -1,5 +1,6 @@
 import wx
 from fsleyes_plugin_shimming_toolbox.components.component import Component
+from fsleyes_plugin_shimming_toolbox.components.input_component import InputComponent
 from fsleyes_plugin_shimming_toolbox.text_with_button import create_info_icon
 
 class CheckboxComponent(Component):
@@ -75,3 +76,31 @@ class CheckboxComponent(Component):
         sizer = wx.BoxSizer(wx.VERTICAL)
         return sizer
     
+    def get_command(self):
+        command = []
+        output = None
+        overlay = []
+        args = ""
+        for checkbox in self.checkboxes:
+            if checkbox.GetValue():
+                label = checkbox.GetLabel()
+                if label == 'f0':
+                    args += '0,'
+                else:
+                    args += str(checkbox.GetLabel()) + ','
+                
+        if self.option_name == "arg":
+            command.append(args[:-1])
+        else:
+            command.extend(['--' + self.option_name, args[:-1]])
+        
+        children_to_return = self.get_children_to_show()
+        for child in children_to_return:
+            if type(child) == InputComponent:
+                cmd, output, overlay = child.get_command()
+            else:
+                cmd = child.get_command()
+                
+            command.extend(cmd)
+        
+        return command, output, overlay
