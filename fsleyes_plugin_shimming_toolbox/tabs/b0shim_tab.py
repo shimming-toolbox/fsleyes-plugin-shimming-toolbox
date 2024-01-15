@@ -99,7 +99,6 @@ class B0ShimTab(Tab):
             elif selection == 'Realtime Dynamic':
                 self.dropdown_slice_rt.on_choice(None)
                 self.dropdown_coil_format_rt.on_choice(None)
-                self.dropdown_scanner_order_rt.on_choice(None)
                 self.dropdown_opt_rt.on_choice(None)
         else:
             pass
@@ -189,9 +188,7 @@ class B0ShimTab(Tab):
             },
         ]
         component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
-        # component_scanner2 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
-        # component_scanner3 = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
-
+        
         dropdown_scanner_format_metadata = [
             {
                 "label": "Slicewise per Channel",
@@ -237,30 +234,6 @@ class B0ShimTab(Tab):
                 "option_value": "0,1,2"
             }
         ]
-        
-        # self.dropdown_scanner_order_dyn = DropdownComponent(
-        #     panel=self,
-        #     dropdown_metadata=dropdown_scanner_order_metadata,
-        #     label="Scanner Order",
-        #     option_name='scanner-coil-order',
-        #     list_components=[self.create_empty_component(),
-        #                      dropdown_scanner_format1, component_scanner1,
-        #                      dropdown_scanner_format2, component_scanner2,
-        #                      dropdown_scanner_format3, component_scanner3],
-        #     component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
-        #     cli=dynamic_cli
-        # )
-        # option_name='scanner-coil-order',
-        #     list_components=[self.create_empty_component(),
-        #                      dropdown_scanner_format1, component_scanner1,
-        #                      dropdown_scanner_format2, component_scanner2,
-        #                      dropdown_scanner_format3, component_scanner3],
-        #     component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
-        #     cli=dynamic_cli
-
-        # dropdown_scanner_format1.add_dropdown_parent(self.dropdown_scanner_order_dyn)
-        # dropdown_scanner_format2.add_dropdown_parent(self.dropdown_scanner_order_dyn)
-        # dropdown_scanner_format3.add_dropdown_parent(self.dropdown_scanner_order_dyn)
 
         self.checkbox_scanner_order = CheckboxComponent(
             panel=self,
@@ -507,17 +480,6 @@ class B0ShimTab(Tab):
 
         component_inputs = InputComponent(self, input_text_box_metadata_inputs, cli=realtime_cli)
 
-        input_text_box_metadata_scanner = [
-            {
-                "button_label": "Scanner constraints",
-                "button_function": "select_file",
-                "name": "scanner-coil-constraints",
-            },
-        ]
-        component_scanner1 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
-        component_scanner2 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
-        component_scanner3 = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
-
         input_text_box_metadata_slice = [
             {
                 "button_label": "Slice Factor",
@@ -561,13 +523,9 @@ class B0ShimTab(Tab):
             cli=realtime_cli
         )
         
-        dropdown_scanner_order_metadata = [
+        checkbox_scanner_order_metadata = [
             {
-                "label": "-1",
-                "option_value": "-1"
-            },
-            {
-                "label": "0",
+                "label": "f0",
                 "option_value": "0"
             },
             {
@@ -580,22 +538,23 @@ class B0ShimTab(Tab):
             }
         ]
 
-        self.dropdown_scanner_order_rt = DropdownComponent(
+        input_text_box_metadata_scanner = [
+            {
+                "button_label": "Scanner constraints",
+                "button_function": "select_file",
+                "name": "scanner-coil-constraints",
+            },
+        ]
+        component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
+        
+        self.checkbox_scanner_order = CheckboxComponent(
             panel=self,
-            dropdown_metadata=dropdown_scanner_order_metadata,
             label="Scanner Order",
-            option_name = 'scanner-coil-order',
-            list_components=[self.create_empty_component(),
-                             dropdown_scanner_format, component_scanner1,
-                             dropdown_scanner_format, component_scanner2,
-                             dropdown_scanner_format, component_scanner3],
-            component_to_dropdown_choice=[0, 1, 1, 2, 2, 3, 3],
-            cli=realtime_cli
+            checkbox_metadata=checkbox_scanner_order_metadata,
+            option_name='scanner-coil-order',
+            components_dict=[{'object': dropdown_scanner_format, 'checkbox': ['f0', '1', '2']},
+                             {'object': component_scanner, 'checkbox': ['f0', '1', '2']}],
         )
-
-        dropdown_scanner_format.add_dropdown_parent(self.dropdown_scanner_order_rt)
-        dropdown_scanner_format.add_dropdown_parent(self.dropdown_scanner_order_rt)
-        dropdown_scanner_format.add_dropdown_parent(self.dropdown_scanner_order_rt)
 
         dropdown_ovf_metadata = [
             {
@@ -753,7 +712,7 @@ class B0ShimTab(Tab):
         self.run_component_rt = RunComponent(
             panel=self,
             list_components=[self.component_coils_rt, component_inputs, self.dropdown_opt_rt, self.dropdown_slice_rt,
-                             self.dropdown_scanner_order_rt,
+                             self.checkbox_scanner_order,
                              self.dropdown_coil_format_rt, dropdown_ovf, component_output],
             st_function="st_b0shim realtime-dynamic",
             # TODO: output paths
