@@ -99,7 +99,7 @@ class CheckboxComponent(Component):
             if type(child) == InputComponent:
                 cmd, output, overlay = child.get_command()
             else:
-                cmd = child.get_command()
+                cmd, _, _ = child.get_command()
                 
             command.extend(cmd)
         
