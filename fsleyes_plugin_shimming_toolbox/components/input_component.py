@@ -141,8 +141,8 @@ def get_command_dict(input_text_boxes):
                         print(option_values)
                         
                 # If its an argument don't include it as an option, if the option list is empty don't either
-                if not is_arg and option_values:
-                    command_list_options.append((name, option_values))
+            if not is_arg and option_values:
+                command_list_options.append((name, option_values))
 
     # Arguments don't need "-"
     for arg in command_list_arguments:

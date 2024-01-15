@@ -21,7 +21,7 @@ def test_st_plugin_b0shim_dyn_lsq_mse():
     options = {'optimizer-method': 'Least Squares',
                'optimizer-criteria': 'Mean Squared Error',
                'slices': 'Auto detect',
-               'scanner-coil-order': '1',
+               'scanner-coil-order': '0,1,2',
                'output-file-format-scanner': 'Slicewise per Channel',
                'output-file-format-coil': 'Slicewise per Channel',
                'fatsat': 'Auto detect',
@@ -123,8 +123,6 @@ def __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options):
             if isinstance(widget, wx.Choice) and widget.IsShown():
                 if widget.GetName() == 'optimizer-method':
                     assert set_dropdown_selection(widget, options['optimizer-method'])
-                # if widget.GetName() == 'scanner-coil-order':
-                #     assert set_dropdown_selection(widget, options['scanner-coil-order'])
                 if widget.GetName() == 'slices':
                     assert set_dropdown_selection(widget, options['slices'])
                 if widget.GetName() == 'output-value-format':
@@ -173,6 +171,7 @@ def __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options):
                         if isinstance(new_widget, wx.TextCtrl) and new_widget.IsShown():
                             if new_widget.GetName() == 'input_coil_1' and counter == 0:
                                 new_widget.SetValue(fname_coil)
+                                counter += 1
                                 realYield()
                             elif new_widget.GetName() == 'input_coil_1' and counter == 1:
                                 new_widget.SetValue(fname_coil_json)
