@@ -94,11 +94,12 @@ class B0ShimTab(Tab):
             if selection == 'Dynamic/volume':
                 self.dropdown_slice_dyn.on_choice(None)
                 self.dropdown_coil_format_dyn.on_choice(None)
-                # self.dropdown_scanner_order_dyn.on_choice(None)
+                self.checkbox_scanner_order_dyn.show_children_sizers(None)
                 self.dropdown_opt_dyn.on_choice(None)
             elif selection == 'Realtime Dynamic':
                 self.dropdown_slice_rt.on_choice(None)
                 self.dropdown_coil_format_rt.on_choice(None)
+                self.checkbox_scanner_order_rt.show_children_sizers(None)
                 self.dropdown_opt_rt.on_choice(None)
         else:
             pass
@@ -188,7 +189,7 @@ class B0ShimTab(Tab):
             },
         ]
         component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=dynamic_cli)
-        
+
         dropdown_scanner_format_metadata = [
             {
                 "label": "Slicewise per Channel",
@@ -235,7 +236,7 @@ class B0ShimTab(Tab):
             }
         ]
 
-        self.checkbox_scanner_order = CheckboxComponent(
+        self.checkbox_scanner_order_dyn = CheckboxComponent(
             panel=self,
             label="Scanner Order",
             checkbox_metadata=checkbox_scanner_order_metadata,
@@ -243,7 +244,7 @@ class B0ShimTab(Tab):
             components_dict=[{'object': dropdown_scanner_format, 'checkbox': ['f0', '1', '2']},
                              {'object': component_scanner, 'checkbox': ['f0', '1', '2']}],
         )
-        
+
         dropdown_ovf_metadata = [
             {
                 "label": "delta",
@@ -419,7 +420,7 @@ class B0ShimTab(Tab):
         self.run_component_dyn = RunComponent(
             panel=self,
             list_components=[self.component_coils_dyn, component_inputs, self.dropdown_opt_dyn, self.dropdown_slice_dyn,
-                             self.checkbox_scanner_order,
+                             self.checkbox_scanner_order_dyn,
                              self.dropdown_coil_format_dyn, dropdown_ovf, component_output],
             st_function="st_b0shim dynamic",
             output_paths=["fieldmap_calculated_shim_masked.nii.gz",
@@ -522,7 +523,7 @@ class B0ShimTab(Tab):
             option_name = 'output-file-format-scanner',
             cli=realtime_cli
         )
-        
+
         checkbox_scanner_order_metadata = [
             {
                 "label": "f0",
@@ -546,8 +547,8 @@ class B0ShimTab(Tab):
             },
         ]
         component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
-        
-        self.checkbox_scanner_order = CheckboxComponent(
+
+        self.checkbox_scanner_order_rt = CheckboxComponent(
             panel=self,
             label="Scanner Order",
             checkbox_metadata=checkbox_scanner_order_metadata,
@@ -712,7 +713,7 @@ class B0ShimTab(Tab):
         self.run_component_rt = RunComponent(
             panel=self,
             list_components=[self.component_coils_rt, component_inputs, self.dropdown_opt_rt, self.dropdown_slice_rt,
-                             self.checkbox_scanner_order,
+                             self.checkbox_scanner_order_rt,
                              self.dropdown_coil_format_rt, dropdown_ovf, component_output],
             st_function="st_b0shim realtime-dynamic",
             # TODO: output paths
