@@ -547,7 +547,7 @@ class B0ShimTab(Tab):
             },
         ]
         component_scanner = InputComponent(self, input_text_box_metadata_scanner, cli=realtime_cli)
-
+            
         self.checkbox_scanner_order_rt = CheckboxComponent(
             panel=self,
             label="Scanner Order",
@@ -555,6 +555,8 @@ class B0ShimTab(Tab):
             option_name='scanner-coil-order',
             components_dict=[{'object': dropdown_scanner_format, 'checkbox': ['f0', '1', '2']},
                              {'object': component_scanner, 'checkbox': ['f0', '1', '2']}],
+            additional_sizer_dict={'info text': None, 'label': 'Scanner Order RIRO', 
+                                   'checkbox metadata': checkbox_scanner_order_metadata}
         )
 
         dropdown_ovf_metadata = [

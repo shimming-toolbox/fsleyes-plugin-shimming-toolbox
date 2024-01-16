@@ -5,7 +5,7 @@ from fsleyes_plugin_shimming_toolbox.text_with_button import create_info_icon
 
 
 class CheckboxComponent(Component):
-    def __init__(self, panel, label, checkbox_metadata, option_name, components_dict={}, info_text=None):
+    def __init__(self, panel, label, checkbox_metadata, option_name, components_dict={}, info_text=None, additional_sizer_dict=None):
         """
         Args:
             list_components (list): list of Components
@@ -21,7 +21,8 @@ class CheckboxComponent(Component):
         self.label = label
         self.info_text = info_text
         self.children = components_dict
-
+        self.additional_sizer_dict = additional_sizer_dict
+        
         self.create_display()
 
     def create_display(self):
@@ -45,6 +46,26 @@ class CheckboxComponent(Component):
 
         self.sizer.Add(self.checkbox_sizer)
         self.sizer.AddSpacer(10)
+        
+        if self.additional_sizer_dict is not None:
+            info_icon = create_info_icon(self.panel, self.additional_sizer_dict["info text"])
+            button = wx.Button(self.panel, -1, label=self.additional_sizer_dict["label"])
+            
+            additional_checkboxes = []
+            for metadata in self.additional_sizer_dict["checkbox metadata"]:
+                additional_checkboxes.append(wx.CheckBox(self.panel, label=metadata["label"]))
+            
+            # Add checkboxes to sizer
+            additional_checkbox_sizer = wx.BoxSizer(wx.HORIZONTAL)
+            additional_checkbox_sizer.Add(info_icon, 0, wx.ALIGN_LEFT | wx.RIGHT, 7)
+            additional_checkbox_sizer.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
+            for checkbox in additional_checkboxes:
+                # Bind
+                checkbox.Bind(wx.EVT_CHECKBOX, self.show_children_sizers)
+                additional_checkbox_sizer.Add(checkbox, 0, wx.ALL, 5)
+            self.checkboxes.extend(additional_checkboxes)
+            self.sizer.Add(additional_checkbox_sizer)
+            self.sizer.AddSpacer(10)
 
         # Add children
         self.add_children()
