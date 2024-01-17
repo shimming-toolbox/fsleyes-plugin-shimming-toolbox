@@ -115,7 +115,6 @@ def get_command_dict(input_text_boxes):
             continue
 
         for input_text_box in input_text_box_list:
-            print(input_text_box)
             is_arg = False
             option_values = []
             for textctrl in input_text_box.textctrl_list:
@@ -138,7 +137,6 @@ def get_command_dict(input_text_boxes):
                             load_in_overlay.append(arg)
                         
                         option_values.append(arg)
-                        print(option_values)
                         
                 # If its an argument don't include it as an option, if the option list is empty don't either
             if not is_arg and option_values:

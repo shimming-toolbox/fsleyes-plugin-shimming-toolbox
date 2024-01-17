@@ -92,24 +92,33 @@ class CheckboxComponent(Component):
         sizer = wx.BoxSizer(wx.VERTICAL)
         return sizer
 
-    def get_command(self):
-        command = []
-        output = None
-        overlay = []
+    def get_argument(self, checkboxes):
         args = ""
-        for checkbox in self.checkboxes:
+        for checkbox in checkboxes:
             if checkbox.GetValue():
                 label = checkbox.GetLabel()
                 if label == 'f0':
                     args += '0,'
                 else:
                     args += str(checkbox.GetLabel()) + ','
+        return args[:-1]
+    
+    def get_command(self):
+        command = []
+        output = None
+        overlay = []
+        
+        args = self.get_argument(self.checkboxes)
 
         if self.option_name == "arg":
-            command.append(args[:-1])
+            command.append(args)
         else:
-            command.extend(['--' + self.option_name, args[:-1]])
+            command.extend(['--' + self.option_name, args])
 
+        if self.checkboxes_riro:
+            args_riro = self.get_argument(self.checkboxes_riro)
+            command.extend(['--' + self.additional_sizer_dict["option name"], args_riro])
+            
         children_to_return = self.get_children_to_show()
         for child in children_to_return:
             if type(child) == InputComponent:

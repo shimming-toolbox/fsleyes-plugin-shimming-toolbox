@@ -555,7 +555,8 @@ class B0ShimTab(Tab):
             option_name='scanner-coil-order',
             components_dict=[{'object': dropdown_scanner_format, 'checkbox': ['f0', '1', '2']},
                              {'object': component_scanner, 'checkbox': ['f0', '1', '2']}],
-            additional_sizer_dict={'info text': None, 'label': 'Scanner Order RIRO', 
+            additional_sizer_dict={'info text': None, 'label': 'Scanner Order RIRO',
+                                   'option name': 'scanner-coil-order-riro',
                                    'checkbox metadata': checkbox_scanner_order_metadata}
         )
 
@@ -714,7 +715,8 @@ class B0ShimTab(Tab):
 
         self.run_component_rt = RunComponent(
             panel=self,
-            list_components=[self.component_coils_rt, component_inputs, self.dropdown_opt_rt, self.dropdown_slice_rt,
+            list_components=[self.component_coils_rt, component_inputs, self.dropdown_opt_rt,
+                             self.dropdown_slice_rt,
                              self.checkbox_scanner_order_rt,
                              self.dropdown_coil_format_rt, dropdown_ovf, component_output],
             st_function="st_b0shim realtime-dynamic",

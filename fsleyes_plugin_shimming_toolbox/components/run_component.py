@@ -189,8 +189,12 @@ class RunComponent(Component):
         for component in self.list_components:  
             
             cmd, output, load_in_overlay = component.get_command()
-            
             command.extend(cmd)
+            
+            if st_function.split(' ')[1] == "realtime-dynamic" and cmd[0] == "--coil":
+                cmd_riro = ['--coil-riro' if i == '--coil' else i for i in cmd]
+                command.extend(cmd_riro)
+                
             self.load_in_overlay.extend(load_in_overlay)
             
             if output:
