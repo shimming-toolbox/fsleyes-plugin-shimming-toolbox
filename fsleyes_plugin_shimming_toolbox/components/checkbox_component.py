@@ -7,10 +7,22 @@ from fsleyes_plugin_shimming_toolbox.text_with_button import create_info_icon
 class CheckboxComponent(Component):
     def __init__(self, panel, label, checkbox_metadata, option_name, components_dict={}, info_text=None, additional_sizer_dict=None):
         """
+        Create a checkbox object
         Args:
-            list_components (list): list of Components
-            component_to_dropdown_choice (list): Tells which component associates with which dropdown selection.
-                                                 If None, assumes 1:1.
+            panel (wx.Panel): A panel is a window on which controls are placed.
+            label (str): Label of the button describing the checkbox
+            checkbox_metadata (list)(dict): A list of dictionaries where the dictionaries have the
+                required keys: ``label``, ``option_value``.
+                .. code::
+                    
+                        {
+                            "label": The label for the checkbox
+                            "option_value": The value linked to the option in the CLI
+                        }
+            option_name (str): Name of the options of the checkbox, start with 'no_arg' if it is not an option
+            components_dict (dict): Dictionary of components to shown when the checkbox is checked
+            info_text (str): Info message displayed when hovering over the "i" icon. Leave blank to auto fill using option_name
+            additional_sizer_dict (dict): Dictionary of additional checkbox to be added to the sizer
         """
         self.sizer = self.create_sizer()
 
@@ -43,7 +55,7 @@ class CheckboxComponent(Component):
         # Add children
         self.add_children()
 
-        wx.CallAfter(self.show_children_sizers, None)
+        wx.CallAfter(self.on_choice, None)
 
     def add_checkbox_sizer(self, checkbox_metadata, info_icon, button, riro=False):
         temp_checkboxes = []
@@ -57,7 +69,7 @@ class CheckboxComponent(Component):
         checkbox_sizer.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
         for checkbox in temp_checkboxes:
             # Bind
-            checkbox.Bind(wx.EVT_CHECKBOX, self.show_children_sizers)
+            checkbox.Bind(wx.EVT_CHECKBOX, self.on_choice)
             checkbox_sizer.Add(checkbox, 0, wx.ALL, 5)        # Add to sizer + spacer below
         if riro:
             self.checkboxes_riro.extend(temp_checkboxes)
@@ -70,7 +82,7 @@ class CheckboxComponent(Component):
         for child in self.children:
             self.sizer.Add(child['object'].sizer, 0, wx.EXPAND)
 
-    def show_children_sizers(self, event):
+    def on_choice(self, event):
         childrens_to_show = self.get_children_to_show()
         for child in self.children:
             if child['object'] in childrens_to_show:
@@ -94,6 +106,7 @@ class CheckboxComponent(Component):
 
     def get_argument(self, checkboxes):
         args = ""
+        {item['label']: item['option_value'] for item in self.checkbox_metadata}
         for checkbox in checkboxes:
             if checkbox.GetValue():
                 label = checkbox.GetLabel()

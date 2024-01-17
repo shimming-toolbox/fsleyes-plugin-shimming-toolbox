@@ -193,7 +193,6 @@ class DropdownComponent(Component):
                     else:
                         input_text_boxes = {name: input_text_box_list}
                         
-                        # TODO: Fix
                         cmd, output, load_in_overlay = get_command_dict(input_text_boxes)
                         command.extend(cmd)
         return command, output, load_in_overlay

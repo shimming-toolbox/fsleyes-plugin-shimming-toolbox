@@ -94,12 +94,12 @@ class B0ShimTab(Tab):
             if selection == 'Dynamic/volume':
                 self.dropdown_slice_dyn.on_choice(None)
                 self.dropdown_coil_format_dyn.on_choice(None)
-                self.checkbox_scanner_order_dyn.show_children_sizers(None)
+                self.checkbox_scanner_order_dyn.on_choice(None)
                 self.dropdown_opt_dyn.on_choice(None)
             elif selection == 'Realtime Dynamic':
                 self.dropdown_slice_rt.on_choice(None)
                 self.dropdown_coil_format_rt.on_choice(None)
-                self.checkbox_scanner_order_rt.show_children_sizers(None)
+                self.checkbox_scanner_order_rt.on_choice(None)
                 self.dropdown_opt_rt.on_choice(None)
         else:
             pass
@@ -228,11 +228,11 @@ class B0ShimTab(Tab):
             },
             {
                 "label": "1",
-                "option_value": "0,1"
+                "option_value": "1"
             },
             {
                 "label": "2",
-                "option_value": "0,1,2"
+                "option_value": "2"
             }
         ]
 

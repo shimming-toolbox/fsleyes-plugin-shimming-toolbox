@@ -94,7 +94,7 @@ def set_dropdown_selection(dropdown_widget, selection_name):
 
 
 def set_checkbox(checkbox_widget):
-    """ Sets the notebook terminal to the page with the given name."""
+    """ Sets the checkbox to True."""
     checkbox_widget.SetValue(True)
     wx.PostEvent(checkbox_widget.GetEventHandler(), wx.CommandEvent(wx.EVT_CHECKBOX.typeId, checkbox_widget.GetId()))
     realYield()
