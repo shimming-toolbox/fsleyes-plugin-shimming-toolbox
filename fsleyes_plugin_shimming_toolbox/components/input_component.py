@@ -153,3 +153,4 @@ def get_command_dict(input_text_boxes):
             command.append(arg)
 
     return command, output, load_in_overlay
+    

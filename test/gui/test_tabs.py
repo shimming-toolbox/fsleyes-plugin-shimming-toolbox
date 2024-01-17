@@ -99,3 +99,4 @@ def set_checkbox(checkbox_widget):
     wx.PostEvent(checkbox_widget.GetEventHandler(), wx.CommandEvent(wx.EVT_CHECKBOX.typeId, checkbox_widget.GetId()))
     realYield()
     return True
+    
