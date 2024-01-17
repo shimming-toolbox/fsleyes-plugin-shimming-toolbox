@@ -16,7 +16,9 @@ class CheckboxComponent(Component):
 
         self.checkbox_metadata = checkbox_metadata
         self.option_name = option_name
-
+        self.checkboxes = []
+        self.checkboxes_riro = []
+        
         self.panel = panel
         self.label = label
         self.info_text = info_text
@@ -30,48 +32,40 @@ class CheckboxComponent(Component):
         self.info_icon = create_info_icon(self.panel, self.info_text)
         self.button = wx.Button(self.panel, -1, label=self.label)
 
-        # Checkboxes
-        self.checkboxes = []
-        for metadata in self.checkbox_metadata:
-            self.checkboxes.append(wx.CheckBox(self.panel, label=metadata["label"]))
-
-        # Add checkboxes to sizer
-        self.checkbox_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        self.checkbox_sizer.Add(self.info_icon, 0, wx.ALIGN_LEFT | wx.RIGHT, 7)
-        self.checkbox_sizer.Add(self.button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
-        for checkbox in self.checkboxes:
-            # Bind
-            checkbox.Bind(wx.EVT_CHECKBOX, self.show_children_sizers)
-            self.checkbox_sizer.Add(checkbox, 0, wx.ALL, 5)        # Add to sizer + spacer below
-
-        self.sizer.Add(self.checkbox_sizer)
-        self.sizer.AddSpacer(10)
+        self.add_checkbox_sizer(self.checkbox_metadata, self.info_icon, self.button)
         
         if self.additional_sizer_dict is not None:
             info_icon = create_info_icon(self.panel, self.additional_sizer_dict["info text"])
             button = wx.Button(self.panel, -1, label=self.additional_sizer_dict["label"])
-            
-            additional_checkboxes = []
-            for metadata in self.additional_sizer_dict["checkbox metadata"]:
-                additional_checkboxes.append(wx.CheckBox(self.panel, label=metadata["label"]))
-            
-            # Add checkboxes to sizer
-            additional_checkbox_sizer = wx.BoxSizer(wx.HORIZONTAL)
-            additional_checkbox_sizer.Add(info_icon, 0, wx.ALIGN_LEFT | wx.RIGHT, 7)
-            additional_checkbox_sizer.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
-            for checkbox in additional_checkboxes:
-                # Bind
-                checkbox.Bind(wx.EVT_CHECKBOX, self.show_children_sizers)
-                additional_checkbox_sizer.Add(checkbox, 0, wx.ALL, 5)
-            self.checkboxes.extend(additional_checkboxes)
-            self.sizer.Add(additional_checkbox_sizer)
-            self.sizer.AddSpacer(10)
+            self.add_checkbox_sizer(self.additional_sizer_dict["checkbox metadata"], 
+                                    info_icon, button, riro=True)
 
         # Add children
         self.add_children()
 
         wx.CallAfter(self.show_children_sizers, None)
 
+    def add_checkbox_sizer(self, checkbox_metadata, info_icon, button, riro=False):
+        temp_checkboxes = []
+        # Checkboxes
+        for metadata in checkbox_metadata:
+            temp_checkboxes.append(wx.CheckBox(self.panel, label=metadata["label"]))
+
+        # Add checkboxes to sizer
+        checkbox_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        checkbox_sizer.Add(info_icon, 0, wx.ALIGN_LEFT | wx.RIGHT, 7)
+        checkbox_sizer.Add(button, 0, wx.ALIGN_LEFT | wx.RIGHT, 10)
+        for checkbox in temp_checkboxes:
+            # Bind
+            checkbox.Bind(wx.EVT_CHECKBOX, self.show_children_sizers)
+            checkbox_sizer.Add(checkbox, 0, wx.ALL, 5)        # Add to sizer + spacer below
+        if riro:
+            self.checkboxes_riro.extend(temp_checkboxes)
+        else:
+            self.checkboxes.extend(temp_checkboxes)
+        self.sizer.Add(checkbox_sizer)
+        self.sizer.AddSpacer(10)
+    
     def add_children(self):
         for child in self.children:
             self.sizer.Add(child['object'].sizer, 0, wx.EXPAND)
@@ -88,7 +82,7 @@ class CheckboxComponent(Component):
 
     def get_children_to_show(self):
         """Get the children to show based on the checkbox selection"""
-        checked_indices = {checkbox.GetLabel() for checkbox in self.checkboxes if checkbox.GetValue()}
+        checked_indices = {checkbox.GetLabel() for checkbox in self.checkboxes + self.checkboxes_riro if checkbox.GetValue()}
         children_to_show = [child['object'] for child in self.children if set(child['checkbox']).intersection(checked_indices)]
 
         return children_to_show
