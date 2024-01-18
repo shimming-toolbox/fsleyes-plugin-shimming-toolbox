@@ -134,9 +134,7 @@ def __test_st_plugin_b0shim_dyn(view, overlayList, displayCtx, options):
         for widget in list_widgets:
             if isinstance(widget, wx.CheckBox) and widget.IsShown():
                 if widget.GetName() == 'check':
-                    widget.SetValue(True)
                     assert set_checkbox(widget)
-                    realYield()
             
         # Select the dropdowns that are nested
         list_widgets = []
