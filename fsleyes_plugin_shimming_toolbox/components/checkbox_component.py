@@ -106,14 +106,11 @@ class CheckboxComponent(Component):
 
     def get_argument(self, checkboxes):
         args = ""
-        {item['label']: item['option_value'] for item in self.checkbox_metadata}
+        option_values = {item['label']: item['option_value'] for item in self.checkbox_metadata}
         for checkbox in checkboxes:
             if checkbox.GetValue():
                 label = checkbox.GetLabel()
-                if label == 'f0':
-                    args += '0,'
-                else:
-                    args += str(checkbox.GetLabel()) + ','
+                args += option_values[label] + ','
         return args[:-1]
     
     def get_command(self):
