@@ -21,7 +21,7 @@ def test_st_plugin_b0shim_dyn_lsq_mse():
     options = {'optimizer-method': 'Least Squares',
                'optimizer-criteria': 'Mean Squared Error',
                'slices': 'Auto detect',
-               'scanner-coil-order': '0,1,2',
+               'scanner-coil-order': '0',
                'output-file-format-scanner': 'Slicewise per Channel',
                'output-file-format-coil': 'Slicewise per Channel',
                'fatsat': 'Auto detect',
