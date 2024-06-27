@@ -281,7 +281,7 @@ class B0ShimTab(Tab):
         
         weighting_signal_loss_metadata = [
             {
-                "button_label": "weighting signal loss",
+                "button_label": "Weighting signal loss",
                 "name": "weighting-signal-loss",
                 "default_text": "0.01",
             },
